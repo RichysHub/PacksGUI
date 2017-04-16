@@ -1,0 +1,11 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+
+# Font files
+*.ttf
+
+#Working Images
+*.png
+
+#Junk
+.idea/
