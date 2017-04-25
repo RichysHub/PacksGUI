@@ -144,11 +144,13 @@ def date_from_filename(filename):
     datetime = '/'.join([*date_list, *time_list])
     return datetime
 
-average_result('MSoG')
-percentage_40('MSoG')
 
-for set in ['Classic', 'GVG', 'TGT', 'WotOG', 'MSoG']:
-    print('{} packs from {}'.format(number_packs(set), set))
+if __name__ == "__main__":
+    average_result('MSoG')
+    percentage_40('MSoG')
 
-for rarity in ['epics', 'legendaries', 'g_commons', 'g_rares', 'g_epics', 'g_legendaries']:
-    print('Timer for {}: {}'.format(rarity, pity_timer('MSoG',rarity)))
+    for set in ['Classic', 'GVG', 'TGT', 'WotOG', 'MSoG']:
+        print('{} packs from {}'.format(number_packs(set), set))
+
+    for rarity in ['epics', 'legendaries', 'g_commons', 'g_rares', 'g_epics', 'g_legendaries']:
+        print('Timer for {}: {}'.format(rarity, pity_timer('MSoG',rarity)))
