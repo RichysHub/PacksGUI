@@ -5,43 +5,23 @@ from pyexcel_ods3 import get_data
 from tinydb import TinyDB
 import glob
 import os
+import configparser
+from utils import date_from_filename
 
 __author__ = "Richard J Spencer"
 
-ODS_FILE = "E:\\Users\\Richard\\Desktop\\Desktop Records.ods"
-CARD_DATA_FILE = 'E:\\Users\\Richard\\Desktop\\card_db.json'
-IMAGE_DIRECTORY = 'E:\\Users\\Richard\\Desktop\\Hearthstone Screenshots\\Packs'
+config = configparser.ConfigParser(allow_no_value=True)
+config.optionxform = str
+config.read('../PacksGUI_conf.ini')
+
+
+#ODS_FILE = "E:\\Users\\Richard\\Desktop\\Desktop Records.ods"
+ODS_FILE = "E:\\Users\\Richard\\Desktop\\GUI_Sandbox\\Desktop Records.ods"
+CARD_DATA_FILE = config['filepaths']['tinydb']
+IMAGE_DIRECTORY = config['output']['packs']
 
 db = TinyDB(CARD_DATA_FILE)
 card_table = db.table('card_data')
-
-def get_sort_key(match):
-    """Takes a single glob match, spits out the date & time, returning a sort_key"""
-    match = match.split('\\')[-1]
-    if match.startswith("Hearthstone Screenshot"):
-        # eg. Hearthstone Screenshot 01-15-17 17.27.24.png
-        # date is zero padded, which is helpful
-        date_list = match[23:31].split('-')
-        # american->english date
-        date_list[0], date_list[1] = date_list[1], date_list[0]
-        date_list[2] = '20' + date_list[2]
-        date = '/'.join(date_list)
-        # time format hh.mm.ss
-        time = match[-12:-4]
-    else:  # underscored version pre mid 2015
-        # eg. Hearthstone_Screenshot_1.3.2014.20.16.36.png
-        # date is NOT zero padded, ie 1.1.2015
-        date_list = match[23:-13].split('.')
-        if len(date_list[0]) == 1:
-            date_list[0] = '0' + date_list[0]
-        if len(date_list[1]) == 1:
-            date_list[1] = '0' + date_list[1]
-        date_list[0], date_list[1] = date_list[1], date_list[0]
-        date = '/'.join(date_list)
-        # time is still zero padded
-        time = match[-12:-4]
-    datetime = '{}/{}/{}_{}'.format(year, month, day, time)
-    return datetime
 
 data = get_data(ODS_FILE)
 current_date = None
@@ -87,9 +67,9 @@ for entry in data['Pack Data'][1:]:
             month = entry[0].month
             day = entry[0].day
             if month < 10:
-                month = '0' +str(month)
+                month = '0' + str(month)
             if day < 10:
-                day = '0' +str(day)
+                day = '0' + str(day)
 
             if (int(year) < 2015) | ((int(year) == 2015) & (int(month) < 4)):
                 # old format, using str(int()) to strip leading zero
@@ -114,11 +94,14 @@ for entry in data['Pack Data'][1:]:
             image_index = 0
             # can use the modified time to order, as glob is potentially arbitrary order
             # would probably be more correct to use filename, but mtime is known to be a good proxy
-            matches = sorted(glob.glob(os.path.join(IMAGE_DIRECTORY, str(year), glob_term)),key=os.path.getmtime)
+            matches = sorted(glob.glob(os.path.join(IMAGE_DIRECTORY, str(year), glob_term)), key=os.path.getmtime)
+
+        # Simple strip of path to recover filename
+        matches = [match.split('\\')[-1] for match in matches]
 
         # if the image is in the bad images array, we just skip it
         # use while in case of multiple bad images in a row
-        while matches[image_index].split('\\')[-1] in bad_images:
+        while matches[image_index] in bad_images:
             # by increasing image index, we go on to just use the next one
             image_index += 1
 
@@ -131,12 +114,12 @@ for entry in data['Pack Data'][1:]:
         # if all has gone well, we can push the data to the tinydb file
         # date is now the sort key
         card_table.insert({
-            'date':get_sort_key(matches[image_index]),
+            'date': date_from_filename(matches[image_index]),
             'commons': entry[1], 'rares': entry[2], 'epics': entry[3], 'legendaries': entry[4],
-            'g_commons': entry[5], 'g_rares': entry[6], 'g_epics': entry[7], 'g_legendaries': entry[8],
+            'golden_commons': entry[5], 'golden_rares': entry[6], 'golden_epics': entry[7], 'golden_legendaries': entry[8],
             'notes': entry[10], 'set': entry[11]
         })
         image_index += 1
 
 for year in error_counts:
-    print('{} errors found in {}'.format(error_counts[year],year))
+    print('{} errors found in {}'.format(error_counts[year], year))

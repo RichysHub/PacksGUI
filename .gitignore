@@ -1,11 +1,14 @@
 # Byte-compiled / optimized / DLL files
 __pycache__/
 
+# Config File
+PacksGUI_conf.ini
+
 # Font files
 *.ttf
 
-#Working Images
+# Working Images
 *.png
 
-#Junk
+# Junk
 .idea/
