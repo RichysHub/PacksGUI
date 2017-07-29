@@ -5,6 +5,7 @@ from tinydb import TinyDB, where, Query
 
 __author__ = "Richard J Spencer"
 
+# TODO: cleanup! Use config file and also actually USE these functions in layout_test
 CARD_DATA_FILE = 'E:\\Users\\Richard\\Desktop\\card_db.json'
 
 
@@ -84,6 +85,7 @@ def total_packs():
 
 
 # Todo: verify actually works
+# Todo: Sets from KFT on will have an initial Leg timer set to non-zero. Need to account for that
 def pity_timer(set, rarity):
     db = TinyDB(CARD_DATA_FILE)
     card_data = db.table('card_data')
@@ -91,6 +93,8 @@ def pity_timer(set, rarity):
     # put into reverse date order
     set_packs.sort(key=lambda entry: entry['date'], reverse=True)
 
+    # We're counting lines till we hit the rarity
+    # Might be better off using a tinydb query to find first occurrence
     timer = 0
     for pack in set_packs:
         if pack[rarity] > 0:
@@ -101,7 +105,7 @@ def pity_timer(set, rarity):
 
 def number_with_key(key):
     """counts how many packs currently have an associated key"""
-    # good for checking profileration of sort_key etc
+    # good for checking proliferation of sort_key etc
     db = TinyDB(CARD_DATA_FILE)
     card_data = db.table('card_data')
     packs = card_data.all()
@@ -129,7 +133,7 @@ def date_from_filename(filename):
     if filename.startswith("Hearthstone Screenshot"):
         # eg. Hearthstone Screenshot 01-15-17 17.27.24.png
         date_list = filename[23:31].split('-')
-        date_list[2] = '20' + date_list[2] # 15->2015
+        date_list[2] = '20' + date_list[2]  # 15->2015
     else: # underscored version pre mid 2015
         # eg. Hearthstone_Screenshot_1.3.2014.20.16.36.png
         date_list = filename[23:-13].split('.')
@@ -139,7 +143,7 @@ def date_from_filename(filename):
             date_list[1] = '0' + date_list[1]
 
     time_list = filename[-12:-4].split('.')
-    date_list[0], date_list[1] = date_list[1], date_list[0] # american->english date
+    date_list[0], date_list[1] = date_list[1], date_list[0]  # american->english date
     date_list.reverse()
     datetime = '/'.join([*date_list, *time_list])
     return datetime
