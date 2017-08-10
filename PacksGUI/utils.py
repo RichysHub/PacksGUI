@@ -3,7 +3,7 @@
 
 from tinydb import TinyDB, where, Query
 from collections import Counter
-import layout_test
+from Hearthstone import Hearthstone
 
 __author__ = "Richard J Spencer"
 
@@ -79,8 +79,8 @@ def percentage_40(set_):
 def value_disenchant(content):
     """"given the contents of a pack in the form of a dict, returns disenchant value in dust"""
     total = 0
-    for rarity in layout_test.Hearthstone.rarities:
-        total += layout_test.Hearthstone.disenchant_values[rarity] * content[rarity]
+    for rarity in Hearthstone.rarities:
+        total += Hearthstone.disenchant_values[rarity] * content[rarity]
     return total
 
 
@@ -91,8 +91,8 @@ def value_disenchant(content):
 def value_enchant(content):
     """"given the contents of a pack in the form of a dict, returns craft cost in dust"""
     total = 0
-    for rarity in layout_test.Hearthstone.rarities:
-        total += layout_test.Hearthstone.enchant_values[rarity] * content[rarity]
+    for rarity in Hearthstone.rarities:
+        total += Hearthstone.enchant_values[rarity] * content[rarity]
     return total
 
 

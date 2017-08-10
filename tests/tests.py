@@ -9,8 +9,13 @@ from datetime import datetime
 from PIL import Image
 from tinydb import TinyDB
 
+import CardPack
+import IntScroller
+import MiniViews
+import Model
+import FullViews
 import layout_test
-from layout_test import Hearthstone
+from Hearthstone import Hearthstone
 
 
 # ~~ IMPORTANT ~~
@@ -26,32 +31,32 @@ class TestIntScroller(unittest.TestCase):
         self.root = tkinter.Tk()
 
     def test_allotted_integer_variable_type(self):
-        scroller = layout_test.IntScroller(self.root)
+        scroller = IntScroller.IntScroller(self.root)
         variable = scroller.var
         self.assertIsInstance(variable, tkinter.IntVar)
 
     def test_default_value(self):
         expected_value = 3
-        scroller = layout_test.IntScroller(self.root, value=expected_value, from_=0, to=5)
+        scroller = IntScroller.IntScroller(self.root, value=expected_value, from_=0, to=5)
         value = scroller.var.get()
         self.assertEqual(value, expected_value)
 
     def test_default_above_range(self):
         # Value should be clamped to the range, regardless of erroneous default
         to_value = 5
-        scroller = layout_test.IntScroller(self.root, value=to_value+1, from_=0, to=to_value, increment=1)
+        scroller = IntScroller.IntScroller(self.root, value=to_value + 1, from_=0, to=to_value, increment=1)
         value = scroller.var.get()
         self.assertEqual(value, to_value)
 
     def test_default_below_range(self):
         from_value = 0
-        scroller = layout_test.IntScroller(self.root, value=from_value-1, from_=from_value, to=5, increment=1)
+        scroller = IntScroller.IntScroller(self.root, value=from_value - 1, from_=from_value, to=5, increment=1)
         value = scroller.var.get()
         self.assertEqual(value, from_value)
 
     def test_increment(self):
         increment = 1
-        scroller = layout_test.IntScroller(self.root, from_=0, increment=1, to=5, value=3)
+        scroller = IntScroller.IntScroller(self.root, from_=0, increment=1, to=5, value=3)
         initial_value = scroller.var.get()
         scroller.inc()
         result_value = scroller.var.get()
@@ -59,7 +64,7 @@ class TestIntScroller(unittest.TestCase):
 
     def test_decrement(self):
         increment = 1
-        scroller = layout_test.IntScroller(self.root, from_=0, increment=1, to=5, value=3)
+        scroller = IntScroller.IntScroller(self.root, from_=0, increment=1, to=5, value=3)
         initial_value = scroller.var.get()
         scroller.dec()
         result_value = scroller.var.get()
@@ -67,13 +72,13 @@ class TestIntScroller(unittest.TestCase):
 
     def test_increment_above_bounds(self):
         to_value = 5
-        scroller = layout_test.IntScroller(self.root, from_=0, to=to_value, value=to_value, increment=1)
+        scroller = IntScroller.IntScroller(self.root, from_=0, to=to_value, value=to_value, increment=1)
         scroller.inc()
         self.assertEqual(scroller.var.get(), to_value)
 
     def test_decrement_below_bounds(self):
         from_value = 0
-        scroller = layout_test.IntScroller(self.root, from_=from_value, to=5, value=from_value, increment=1)
+        scroller = IntScroller.IntScroller(self.root, from_=from_value, to=5, value=from_value, increment=1)
         scroller.dec()
         self.assertEqual(scroller.var.get(), from_value)
 
@@ -81,7 +86,7 @@ class TestIntScroller(unittest.TestCase):
         # In use cases where Up arrow should decrease the number on the IntScroller
         # Example case would be for end of season rank, Rank 1 'higher' than Rank 25
         increment = -1
-        scroller = layout_test.IntScroller(self.root, from_=0, increment=increment, to=5, value=3)
+        scroller = IntScroller.IntScroller(self.root, from_=0, increment=increment, to=5, value=3)
         initial_value = scroller.var.get()
         scroller.inc()
         result_value = scroller.var.get()
@@ -89,7 +94,7 @@ class TestIntScroller(unittest.TestCase):
 
     def test_negative_step_decrement(self):
         increment = -1
-        scroller = layout_test.IntScroller(self.root, from_=0, increment=increment, to=5, value=3)
+        scroller = IntScroller.IntScroller(self.root, from_=0, increment=increment, to=5, value=3)
         initial_value = scroller.var.get()
         scroller.dec()
         result_value = scroller.var.get()
@@ -97,13 +102,13 @@ class TestIntScroller(unittest.TestCase):
 
     def test_negative_increment_below_bounds(self):
         from_value = 0
-        scroller = layout_test.IntScroller(self.root, from_=from_value, to=5, value=from_value, increment=-1)
+        scroller = IntScroller.IntScroller(self.root, from_=from_value, to=5, value=from_value, increment=-1)
         scroller.inc()
         self.assertEqual(scroller.var.get(), from_value)
 
     def test_negative_decrement_above_bounds(self):
         to_value = 5
-        scroller = layout_test.IntScroller(self.root, from_=0, to=to_value, value=to_value, increment=-1)
+        scroller = IntScroller.IntScroller(self.root, from_=0, to=to_value, value=to_value, increment=-1)
         scroller.dec()
         self.assertEqual(scroller.var.get(), to_value)
 
@@ -114,7 +119,7 @@ class TestCardPack(unittest.TestCase):
         image_name = 'Hearthstone_Screenshot_1.2.2014.03.04.05.png'
         folder_path = 'C:/'
 
-        card_pack = layout_test.CardPack(image_name, folder_path)
+        card_pack = CardPack.CardPack(image_name, folder_path)
 
         self.assertEqual(card_pack.image_name, image_name)
         self.assertEqual(card_pack.full_path, 'C:/Hearthstone_Screenshot_1.2.2014.03.04.05.png')
@@ -133,7 +138,7 @@ class TestView(unittest.TestCase):
 
     def setUp(self):
         root = tkinter.Tk()
-        self.view = layout_test.View(root)
+        self.view = FullViews.View(root)
 
         # Having to add in the two frames, which would be done by child class
         self.subpage_frame = tkinter.Frame(root)
@@ -238,7 +243,7 @@ class TestStatsView(unittest.TestCase):
 
     def setUp(self):
         root = tkinter.Tk()
-        self.view = layout_test.StatsView(root)
+        self.view = FullViews.StatsView(root)
 
     def test_set_selector_created(self):
         variable = tkinter.StringVar()
@@ -278,7 +283,7 @@ class TestPackMiniView(unittest.TestCase):
     def setUp(self):
         root = tkinter.Tk()
         # Wouldn't normally instantiate as top level, but can do
-        self.view = layout_test.PackMiniView(root)
+        self.view = MiniViews.PackMiniView(root)
 
     def test_scrollers_created(self):
         scrollvars = {rarity: tkinter.StringVar() for rarity in Hearthstone.rarities}
@@ -286,7 +291,7 @@ class TestPackMiniView(unittest.TestCase):
 
         for rarity in Hearthstone.rarities:
             with self.subTest(rarity=rarity):
-                self.assertIsInstance(self.view.rarity_scrollers[rarity], layout_test.IntScroller, rarity)
+                self.assertIsInstance(self.view.rarity_scrollers[rarity], IntScroller.IntScroller, rarity)
 
     def test_scroll_variables_unpacked(self):
         scrollvars = {rarity: tkinter.StringVar() for rarity in Hearthstone.rarities}
@@ -318,7 +323,7 @@ class TestOtherMiniView(unittest.TestCase):
 
     def setUp(self):
         root = tkinter.Tk()
-        self.view = layout_test.OtherMiniView(root)
+        self.view = MiniViews.OtherMiniView(root)
 
     def test_folder_selector_created(self):
         options = ['ONE', 'TWO', 'THREE']
@@ -380,7 +385,7 @@ class TestModel(unittest.TestCase):
     # ~~ Test init ~~
 
     def test_assigns_tkinter_variables(self):
-        md = layout_test.Model(self.config)
+        md = Model.Model(self.config)
         string_variables = [md.current_subpage, md.notes,
                             md.card_set, md.view_card_set]
 
@@ -439,11 +444,11 @@ class TestModel(unittest.TestCase):
         self.teardown_files.append(new_2_path)
         self.teardown_dirs.append(desktop_folder)
 
-        model = layout_test.Model(self.config)
+        model = Model.Model(self.config)
 
         # Pack will have already been popped, so will only have 2 left
         self.assertEqual(len(model.packs), 2)
-        self.assertIsInstance(model.packs[0], layout_test.CardPack)
+        self.assertIsInstance(model.packs[0], CardPack.CardPack)
 
         # The exact details of the sorting and date extraction will be tested elsewhere
         # Here we simply test we have them sorted correctly
@@ -451,7 +456,7 @@ class TestModel(unittest.TestCase):
         self.assertEqual(model.packs[0].image_name, new_2_name)
         self.assertEqual(model.packs[1].image_name, new_1_name)
         # Oldest pack will have been popped off the list already
-        self.assertIsInstance(model.current_pack, layout_test.CardPack)
+        self.assertIsInstance(model.current_pack, CardPack.CardPack)
         self.assertEqual(model.current_pack.image_name, old_name)
 
         # Before teardown, we need to close the image
@@ -476,7 +481,7 @@ class TestModel(unittest.TestCase):
         self.teardown_files.append(invalid_path)
         self.teardown_dirs.append(desktop_folder)
 
-        model = layout_test.Model(self.config)
+        model = Model.Model(self.config)
 
         # Should not have any packs, as the valid one has been popped
         self.assertEqual(len(model.packs), 0)
@@ -506,7 +511,7 @@ class TestModel(unittest.TestCase):
         self.teardown_files.append(file_2_path)
         self.teardown_dirs.append(desktop_folder)
 
-        model = layout_test.Model(self.config)
+        model = Model.Model(self.config)
 
         # Model auto-pulls file_1 into current_pack
         self.assertEqual(len(model.packs), 1)
@@ -535,7 +540,7 @@ class TestModel(unittest.TestCase):
         self.teardown_files.append(file_1_path)
         self.teardown_dirs.append(desktop_folder)
 
-        model = layout_test.Model(self.config)
+        model = Model.Model(self.config)
 
         for rarity in Hearthstone.rarities:
             model.quantities[rarity].set(1)
@@ -568,7 +573,7 @@ class TestModel(unittest.TestCase):
     # Note, only the values of the model are tested, no image need be loaded
 
     def test_valid_pack(self):
-        model = layout_test.Model(self.config)
+        model = Model.Model(self.config)
 
         for rarity in Hearthstone.rarities:
             model.quantities[rarity].set(Hearthstone.default_pack[rarity])
@@ -577,12 +582,12 @@ class TestModel(unittest.TestCase):
         self.assertTrue(model.is_valid_pack())
 
     def test_valid_pack_defaults(self):
-        model = layout_test.Model(self.config)
+        model = Model.Model(self.config)
         model.card_set.set('Classic')
         self.assertTrue(model.is_valid_pack())
 
     def test_valid_pack_noteworthy(self):
-        model = layout_test.Model(self.config)
+        model = Model.Model(self.config)
         model.quantities['common'].set(3)
         model.quantities['golden_epic'].set(1)
         model.card_set.set('Classic')
@@ -593,7 +598,7 @@ class TestModel(unittest.TestCase):
         self.assertTrue(model.is_valid_pack())
 
     def test_too_many_cards(self):
-        model = layout_test.Model(self.config)
+        model = Model.Model(self.config)
 
         for rarity in Hearthstone.rarities:
             model.quantities[rarity].set(0)
@@ -605,7 +610,7 @@ class TestModel(unittest.TestCase):
         self.assertFalse(model.is_valid_pack())
 
     def test_too_few_cards(self):
-        model = layout_test.Model(self.config)
+        model = Model.Model(self.config)
 
         for rarity in Hearthstone.rarities:
             model.quantities[rarity].set(0)
@@ -614,7 +619,7 @@ class TestModel(unittest.TestCase):
         self.assertFalse(model.is_valid_pack())
 
     def test_all_common_cards(self):
-        model = layout_test.Model(self.config)
+        model = Model.Model(self.config)
 
         for rarity in Hearthstone.rarities:
             model.quantities[rarity].set(0)
@@ -624,13 +629,13 @@ class TestModel(unittest.TestCase):
         self.assertFalse(model.is_valid_pack())
 
     def test_no_set_selected(self):
-        model = layout_test.Model(self.config)
+        model = Model.Model(self.config)
         # defaults is valid, sans the card_set
         self.assertFalse(model.is_valid_pack())
         pass
 
     def test_no_required_notes(self):
-        model = layout_test.Model(self.config)
+        model = Model.Model(self.config)
         model.quantities['common'].set(3)
         model.quantities['golden_epic'].set(1)
         model.card_set.set('Classic')
@@ -684,7 +689,7 @@ class TestModel(unittest.TestCase):
         self.teardown_files.append(file_1_path)
         self.teardown_dirs.append(desktop_folder)
 
-        model = layout_test.Model(self.config)
+        model = Model.Model(self.config)
 
         self.assertEqual(model.current_pack.image_name, file_1)
         model.not_pack()
@@ -724,7 +729,7 @@ class TestModel(unittest.TestCase):
         self.config.set('sets_standard', 'Knights of the Frozen Throne', 'KFT')
         self.config.set('sets_standard', 'Whispers of the Old Gods', 'WotOG')
 
-        model = layout_test.Model(self.config)
+        model = Model.Model(self.config)
 
         # Have to disable the trace the vew_card_set variable, so we can override value
         model.view_card_set.trace_vdelete(*model.view_card_set.trace_vinfo()[0])
@@ -850,11 +855,11 @@ class TestGUI(unittest.TestCase):
         root = tkinter.Tk()
         gui = layout_test.GUI(root, self.config)
 
-        self.assertIsInstance(gui.model, layout_test.Model)
-        self.assertIsInstance(gui.main_view, layout_test.MainView)
-        self.assertIsInstance(gui.pack_view, layout_test.PackView)
-        self.assertIsInstance(gui.stats_view, layout_test.StatsView)
-        self.assertIsInstance(gui.pity_view, layout_test.PityView)
+        self.assertIsInstance(gui.model, Model.Model)
+        self.assertIsInstance(gui.main_view, FullViews.MainView)
+        self.assertIsInstance(gui.pack_view, FullViews.PackView)
+        self.assertIsInstance(gui.stats_view, FullViews.StatsView)
+        self.assertIsInstance(gui.pity_view, FullViews.PityView)
 
 
 if __name__ == '__main__':
