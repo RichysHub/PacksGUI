@@ -17,30 +17,8 @@ from layout_test import Hearthstone
 # This is a large file for tests, prior to the refactoring
 # Tests should be placed into files that match source files
 
-# Separate test config should be passed in, ensuring tests don't interact with real data
-
-# Most functions in layout_test and utils have been labeled with : # TODO: test
-# each of these may require more than one test to fully satisfy testing
-
 # Make sure you aren't pitching test code vs real code for no reason
 # tests where it's easy to construct, but hard for the real code to deconstruct are great though
-
-
-# ~~ Additional test ideas ~~
-
-# If ripper were using some broken-out saving method, we could even use that with the TinyDB object
-# That would ensure we were saving in the same format for testing, as we would be in usage
-# Main issue we would otherwise come across is that our save format would be different
-
-# ~~ Before we forget ~~
-# If we want to do a large number of tests that have a lot of set up in common,
-# ---> could abstract that as a new base class
-
-# TODO: a lot of these tests have the case where:
-# in order to do and test X, we must do Y
-# Y is separately tested, though is never done without X
-# In this case, we can just condense to single test, with multiple asserts
-
 
 class TestIntScroller(unittest.TestCase):
 
@@ -98,9 +76,6 @@ class TestIntScroller(unittest.TestCase):
         scroller = layout_test.IntScroller(self.root, from_=from_value, to=5, value=from_value, increment=1)
         scroller.dec()
         self.assertEqual(scroller.var.get(), from_value)
-
-    # TODO: decisions may change about how from_ and to are interpreted for negative increment
-    # Currently assumed from_ < to
 
     def test_negative_step_increment(self):
         # In use cases where Up arrow should decrease the number on the IntScroller
@@ -267,7 +242,6 @@ class TestStatsView(unittest.TestCase):
 
     def test_set_selector_created(self):
         variable = tkinter.StringVar()
-        # TODO: move to using Hearthstone.sets, or whatever is decided upon
         standard = ['ONE', 'TWO', 'THREE']
         wild = ['FOUR', 'FIVE', 'SIX']
         self.view.add_set_selector(variable, standard, wild)
@@ -324,7 +298,6 @@ class TestPackMiniView(unittest.TestCase):
 
     def test_set_selector_created(self):
         variable = tkinter.StringVar()
-        # TODO: move to using Hearthstone.sets, or whatever is decided upon
         standard = ['ONE', 'TWO', 'THREE']
         wild = ['FOUR', 'FIVE', 'SIX']
         self.view.add_set_selector(variable, standard, wild)
@@ -564,8 +537,6 @@ class TestModel(unittest.TestCase):
 
         model = layout_test.Model(self.config)
 
-        # Model auto-pulls file_1 into current_pack
-
         for rarity in Hearthstone.rarities:
             model.quantities[rarity].set(1)
 
@@ -586,7 +557,6 @@ class TestModel(unittest.TestCase):
         for rarity in Hearthstone.rarities:
             with self.subTest(rarity=rarity):
                 self.assertEqual(model.quantities[rarity].get(), Hearthstone.default_pack[rarity])
-
 
         self.assertEqual(model.notes.get(), '')
         # card set is intentionally left
@@ -720,8 +690,6 @@ class TestModel(unittest.TestCase):
         model.not_pack()
         self.assertIsNone(model.current_pack)
         self.assertTrue(os.path.exists(file_1_path))
-
-        # Model auto-pulls file_1 into current_pack
 
     # ~~ Test extract_data ~~
     # Todo: Currently just tests for pack data extraction, will need to add Arena and EOS

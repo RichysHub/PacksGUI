@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Todo: remove the import * bad habits
+# Todo: refactor to remove the import * bad habits
 
 # from tkinter import Tk, Menu, PhotoImage, Label, Spinbox, Frame
 import configparser
@@ -17,14 +17,9 @@ from utils import date_from_filename
 
 
 class IntScroller(Frame):
-    # TODO: test
-    # Some simple test to ensure that the textvariable is suitable updated
-    # check works for non-default delta, negative delta etc
-    # Check bounds are upheld
+
     def __init__(self, master, **kwargs):
         super().__init__(master)
-        # Todo: add some fancy backdrop graphics with a holding label
-        # self.backdrop = Label(self)
 
         # define from_ < to, even for negative increment
         self.min = kwargs.pop('from_', 0)
@@ -32,7 +27,7 @@ class IntScroller(Frame):
         self.increment = kwargs.pop('increment', 1)
         self.var = kwargs.pop('textvariable', IntVar())
 
-        # Defaulting to min, may want to do something funky for negative increment?
+        # Defaulting to min if no starting value given
         value = kwargs.pop('value', self.min)
         # Clamp value to range
         value = min(self.max, max(value, self.min))
@@ -130,11 +125,6 @@ class View(Frame):
         self.subpage_button_frame = None
         self.active_subpage = None
 
-    # TODO: test
-    # Do we test on the base class, or on a derivative of it?
-    # Subpage is returned
-    # Ensure button does things?
-
     # TODO: from trying to envisage tests, this seems to do a LOT for one method
     # --> is this a problem?
     def add_subpage(self, constructor):
@@ -156,16 +146,11 @@ class View(Frame):
         self.active_subpage.set(subpage.name)
         return subpage
 
-    # TODO: test?
-    # hard to test that the page is actually raised, unless we can get some height info somehow
-    # can definitely test the variable is updated correctly
     def raise_view(self, subpage_name):
         frame = self.subpages[subpage_name]
         self.active_subpage.set(subpage_name)
         frame.tkraise()
 
-    # TODO: test
-    # Will be tested in the background of testing the raise funcitons & things
     def bind_subpage_variable(self, subpage_var):
         self.active_subpage = subpage_var
 
@@ -220,9 +205,6 @@ class StatsView(View):
         self.columnconfigure(2, weight=1)
         self.columnconfigure(3, weight=1)
 
-    # TODO: test
-    # Ensure the set selector is present (children of View list ?)
-    # Verify the selector options are correct
     def add_set_selector(self, model_variable, standard, wild):
         # Adding in some space padding to avoid an issue with tkinter
         # AS 2 OptionMenus would have some of the same items, highlight tick cross-updates
@@ -234,25 +216,17 @@ class StatsView(View):
         self.set_selector = set_selector
         pass
 
-    # TODO: test
-    # set the variable, change it, and then see if the label is updated?
-    # Should be able to pull the text from the Label, presumably
     def bind_pack_number(self, variable):
         # binds the variable as the value for the pack number display
         self.total_packs_number.config(textvariable=variable)
 
-    # TODO: test
-    # same as pack_number
     def bind_total_cards_numbers(self, variable_dict):
         for rarity in Hearthstone.rarities:
             self.total_numbers[rarity].config(textvariable=variable_dict[rarity])
 
-    # TODO: test
-    # again, same as above 2
     def bind_mean_cards_numbers(self, variable_dict):
         for rarity in Hearthstone.rarities:
             self.mean_numbers[rarity].config(textvariable=variable_dict[rarity])
-
 
 # Todo: rename to something like 'Image storing', given does more than packs now
 # A view will sit within the app, bordered by padding, with navigation above
@@ -287,8 +261,6 @@ class PackView(View):
         self.columnconfigure(2, weight=1)
         self.columnconfigure(3, weight=1)
 
-    # Todo: test?
-    # check is sized correctly?
     def set_image(self, image):
         # takes the result of Image.open, and pushes result to the image frame
         sized_image = image.resize((700, 394), Image.ANTIALIAS)
@@ -317,8 +289,6 @@ class PackMiniView(View):
         self.columnconfigure(2, weight=1)
         self.columnconfigure(3, weight=1)
 
-    # TODO: test
-    # verify scrollvars are unpacked correctly
     def add_scrollers(self, scrollvars):
         for rarity in Hearthstone.rarities:
             self.rarity_scrollers.update({rarity: IntScroller(self, textvariable=scrollvars[rarity], width=2)})
@@ -333,8 +303,6 @@ class PackMiniView(View):
         self.rarity_scrollers['golden_epic'].grid(row=1, column=2, pady=10)
         self.rarity_scrollers['golden_legendary'].grid(row=1, column=3, pady=10)
 
-    # TODO: test
-    # Set selector added, options correct, bound to variable right
     def add_set_selector(self, model_variable, standard, wild):
         set_selector = OptionMenu(self, model_variable, "Card Set", *standard, *wild)
         set_selector['menu'].insert_separator(len(standard))
@@ -426,11 +394,6 @@ class MainView(View):
 # model will then go and grab the files it needs to hold
 class Model:
 
-    # TODO: test
-    # config parsed and things are extracted
-    # Tinydb data is extracted correctly
-    # Verify all the 'Var's are present and correct?
-    # Check trace_variable is bound correctly - could overload the self.extract_data with a testing function
     def __init__(self, config):
         self.config = config
 
@@ -490,9 +453,6 @@ class Model:
 
         pass
 
-    # TODO: test
-    # Ensure functions correctly - doesn't false-match, gets 'em all
-    # Verify the list is sorted correctly
     def find_images(self):
         """Finds all the screenshots on the desktop that might be packs, and stores them"""
         desktop_path = self.config['filepaths']['desktop']
@@ -503,9 +463,6 @@ class Model:
         # reverse so pop can be used to get in order
         self.packs.sort(key=lambda pack: pack.sortkey, reverse=True)
 
-    # TODO: test
-    # moves to next pack
-    # handles the no-more-packs situation correctly
     def next_pack(self):
         # closing images once we're done with them
         if self.current_pack:
@@ -523,14 +480,9 @@ class Model:
 
         self.reset_variables()
 
-    # TODO: test
-    # ensure that after this is run, any contents are wiped
-    # Ensure defaults are in correct boxes
     def reset_variables(self):
         # Resetting some variables back to default values
         for rarity in Hearthstone.rarities:
-            # Todo: default pack, move to Hearthstone class?
-            # get default contents of pack, assumes 0 of any not specified
             default = Hearthstone.default_pack[rarity]
             self.quantities[rarity].set(default)
         self.notes.set('')
@@ -578,7 +530,7 @@ class Model:
         # commits pack data to tinydb file
         # makes no attempt to validate, assumes you have sorted this
 
-        # Todo: somehow check the current subpage, and modify behaviour accordingly
+        # Todo: check the current subpage, and modify behaviour accordingly
 
         with TinyDB(self.db_file) as db:
             card_table = db.table('card_data')
@@ -604,9 +556,6 @@ class Model:
 
         self.next_pack()
 
-    # TODO: test
-    # pack is not moved, and the next image is loaded in
-    # Really weak test, but especially if this gets more complex, would be nice to be sure
     def not_pack(self):
         # "Not pack" will likely be removed and made into "skip".
         # Images for things other than packs will have a sub page of the storage screen
@@ -615,10 +564,6 @@ class Model:
     # Another alias. Can be cleaned up when refactoring if needed
     skip_image = next_pack
 
-    # TODO: test
-    # When passed a set name, ensure it pulls back only for that set
-    # Handles no data being found for the given set sensibly
-    # Handles case for no option selected, 'Card Set'
     def extract_data(self, *callback):
         # called when the view_card_set variable changes
         # looks at the new value, and determines if it is a set, or 'All Sets'
@@ -692,7 +637,7 @@ class GUI:
         # ~~ Main pack view ~~
         self.pack_view.submit_button.config(command=self.submit)
         # Self methods, rather than model so we can hook in to update image
-        # Todo: should we hook the image update in as a variable binging?
+        # Todo: should we hook the image update in as a variable binding?
         self.pack_view.not_pack_button.config(command=self.not_pack)
         self.update_image()
         self.pack_view.bind_subpage_variable(self.model.current_subpage)
@@ -756,33 +701,12 @@ class GUI:
         pass
 
 
-# TODO: before changing things that start actually interacting with the filesystem, need some tests
-# Tests SHOULD be able to load in just the model, and effectively simulate a user
-# Button presses on the interface should only ever be effecting the model
-# --> not_pack does call a GUI method, for updating image, not a huge sticking point
-# Tests should be able to see that the program moves files as expected, and then move 'em back
-# Probably just a single image
-# Random tests can make up the filename, and meta data, and watch as the system stores it
-# Test different config options all work
-# Test that the database is correctly updated for the submissions
-# Check data verification works
-
-# Todo: one test per source file seems like a standard practice
-# One file per source file, with a test set per source class
-# --> Some other nest another test class inside, for each method, probs overkill here, but maybe
-# --> If tests need setup or 2 types, 2 classes works better
-# Shouldn't be too hard to mirror refactoring that way, just got to check top level class contents of the two files
-# Majority of tests will be for model, presumably
-
-# https://github.com/sloria/TextBlob/tree/dev/textblob
-# random repo to see some style, uses Nose, but close enough
 if __name__ == '__main__':
     # create a root window, set up the GUI in that window, and run
     root = Tk()
 
     # Todo: when packaged up, have a method that sets the config file
     # --> all things that use config would have to be made after this, or updated :/
-
 
     # using configparser, can load in the .ini file
     configuration = configparser.ConfigParser(allow_no_value=True)
