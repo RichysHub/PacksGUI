@@ -2,20 +2,34 @@
 """"Script to rip card data from existing ods file into tinydb format"""
 
 from tinydb import TinyDB, where, Query
+from collections import Counter
+import layout_test
 
 __author__ = "Richard J Spencer"
 
 # TODO: cleanup! Use config file and also actually USE these functions in layout_test
 CARD_DATA_FILE = 'E:\\Users\\Richard\\Desktop\\card_db.json'
 
+# TODO: so much WETness in these functions! so many of them reimplement loading in the data from file
 
-def average_result(set):
+# TODO: move other things that belong here, here
+
+# TODO: better use of config properties for validation and simplification
+
+# TODO: test
+# verify averages are calculated correctly
+# --> effectively combining a test that it loads the data alright, I suppose
+
+
+# TODO: this is just printing at the moment, we will need one for actual analysis later
+def average_result(set_):
     """given the set code, calculates average contents"""
-    db=TinyDB(CARD_DATA_FILE)
+    db = TinyDB(CARD_DATA_FILE)
     card_data = db.table('card_data')
-    set_results = card_data.search(where('set') == set)
+    set_results = card_data.search(where('set') == set_)
     print(set_results)
     c = r = e = l = g_c = g_r = g_e = g_l = total = 0
+    # TODO: can revamp with some collections.counter usage, probably
     for entry in set_results:
         total += 1
         c += entry['commons']
@@ -34,56 +48,67 @@ def average_result(set):
     pass
 
 
-def number_packs(set):
+# TODO: test
+# mock data file can be generated, and passed in
+# ensure ignores malformed entries present
+# gets count of packs correct for random sets
+def number_packs(set_):
     db = TinyDB(CARD_DATA_FILE)
     card_data = db.table('card_data')
-    total = card_data.count(where('set') == set)
+    total = card_data.count(where('set') == set_)
     return total
 
 
-def percentage_40(set):
+# TODO: can probably be broken down as a combination of two smaller functions
+# --> total number of packs, as by number_packs, and then number of given dust value
+# TODO: looks like could be clearer using the where logic from tinydb
+def percentage_40(set_):
     """"calculates the %ge of the given set that are 40 dust packs (4c1r)"""
-    db=TinyDB(CARD_DATA_FILE)
+    db = TinyDB(CARD_DATA_FILE)
     card_data = db.table('card_data')
-    total = card_data.count(where('set') == set)
+    total = card_data.count(where('set') == set_)
     q = Query()
-    num_forties = card_data.count((q.set == set) & (q.commons == 4) & (q.rares == 1))
+    num_forties = card_data.count((q.set == set_) & (q.commons == 4) & (q.rares == 1))
 
     print(num_forties/total)
 
 
-def value_DE(content):
-    """"given the contens of a pack in the form of a dict, returns disenchant value in dust"""
-    c = content['commons']
-    r = content['rares']
-    e = content['epics']
-    l = content['legendaries']
-    g_c = content['g_commons']
-    g_r = content['g_rares']
-    g_e = content['g_epics']
-    g_l = content['g_legendaries']
-    return 5*c + 20*r + 100*e + 400*l + 50*g_c + 100*g_r + 400*g_e * 1600*g_l
+# TODO: test
+# passed an assortment of cards, does it return the correct value?
+# could random test it, but at that point you're trusting the random-gen solver more for no reason
+def value_disenchant(content):
+    """"given the contents of a pack in the form of a dict, returns disenchant value in dust"""
+    total = 0
+    for rarity in layout_test.Hearthstone.rarities:
+        total += layout_test.Hearthstone.disenchant_values[rarity] * content[rarity]
+    return total
 
 
-def value_craft(content):
-    """"given the contens of a pack in the form of a dict, returns craft cost in dust"""
-    c = content['commons']
-    r = content['rares']
-    e = content['epics']
-    l = content['legendaries']
-    g_c = content['g_commons']
-    g_r = content['g_rares']
-    g_e = content['g_epics']
-    g_l = content['g_legendaries']
-    return 40*c + 100*r + 400*e + 1600*l + 400*g_c + 800*g_r + 1600*g_e * 3200*g_l
+# TODO: test
+# As with the value_DE
+# TODO: logic once condensed as per suggestions would only differ from value_DE by the value dict
+# --> This could be passed in, or be a Hearthstone constant, and DRY things up that way
+def value_enchant(content):
+    """"given the contents of a pack in the form of a dict, returns craft cost in dust"""
+    total = 0
+    for rarity in layout_test.Hearthstone.rarities:
+        total += layout_test.Hearthstone.enchant_values[rarity] * content[rarity]
+    return total
 
 
+# TODO: test
+# do we get the right number of packs from a test tinyDB file?
 def total_packs():
+    # TODO: can be extended to take an argument that defaults to None, so can search for total for set
+    # ie, merge with number_packs
     db = TinyDB(CARD_DATA_FILE)
     card_data = db.table('card_data')
     return len(card_data)
 
 
+# TODO: test
+# test TinyDB file with known timer values, verify they are returned
+# Could random test for this, counting when adding to the file is easy, calculating the timer is less easy
 # Todo: verify actually works
 # Todo: Sets from KFT on will have an initial Leg timer set to non-zero. Need to account for that
 def pity_timer(set, rarity):
@@ -95,6 +120,7 @@ def pity_timer(set, rarity):
 
     # We're counting lines till we hit the rarity
     # Might be better off using a tinydb query to find first occurrence
+    # Can we then get some form of index from that, and ensure things have been sorted by correct key?
     timer = 0
     for pack in set_packs:
         if pack[rarity] > 0:
@@ -103,6 +129,7 @@ def pity_timer(set, rarity):
     return timer
 
 
+# TODO: this was really built as a utility when fleshing out the system, is it going to have use?
 def number_with_key(key):
     """counts how many packs currently have an associated key"""
     # good for checking proliferation of sort_key etc
@@ -118,10 +145,11 @@ def number_with_key(key):
     print('{} out of {} have sort keys'.format(with_key, total))
 
 
-def filename_from_date(date):
-    pass
-
-
+# TODO: test
+# pass in some file names, then peel out the data from the returned datetime and compare
+# Ensure works for both types of filename
+# TODO: handle malformed file names?
+# TODO: use of slice is clunky, could use regex, or a less painful to understand split
 def date_from_filename(filename):
     """
     Takes filename of screenshot and returns string date
@@ -150,6 +178,7 @@ def date_from_filename(filename):
 
 
 if __name__ == "__main__":
+    # TODO: remove, was just for testing
     average_result('MSoG')
     percentage_40('MSoG')
 

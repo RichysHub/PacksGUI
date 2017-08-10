@@ -14,6 +14,8 @@ config = configparser.ConfigParser(allow_no_value=True)
 config.optionxform = str
 config.read('../PacksGUI_conf.ini')
 
+# TODO: a lot can be done here, including config usage
+# TODO: make a lot of this more generic
 
 #ODS_FILE = "E:\\Users\\Richard\\Desktop\\Desktop Records.ods"
 ODS_FILE = "E:\\Users\\Richard\\Desktop\\GUI_Sandbox\\Desktop Records.ods"
@@ -94,6 +96,7 @@ for entry in data['Pack Data'][1:]:
             image_index = 0
             # can use the modified time to order, as glob is potentially arbitrary order
             # would probably be more correct to use filename, but mtime is known to be a good proxy
+            # Todo: change to use filename, using utils.py
             matches = sorted(glob.glob(os.path.join(IMAGE_DIRECTORY, str(year), glob_term)), key=os.path.getmtime)
 
         # Simple strip of path to recover filename
@@ -113,6 +116,9 @@ for entry in data['Pack Data'][1:]:
 
         # if all has gone well, we can push the data to the tinydb file
         # date is now the sort key
+
+        # Todo: Really weird we aren't storing the actual filename here.
+        # ---> Sure it takes space, but it's so much easier to then show image later
         card_table.insert({
             'date': date_from_filename(matches[image_index]),
             'commons': entry[1], 'rares': entry[2], 'epics': entry[3], 'legendaries': entry[4],

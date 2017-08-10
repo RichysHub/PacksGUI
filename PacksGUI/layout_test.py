@@ -3,29 +3,41 @@
 # Todo: remove the import * bad habits
 
 # from tkinter import Tk, Menu, PhotoImage, Label, Spinbox, Frame
-from tkinter import *
-from tkinter.ttk import *
-# from tkinter import font
-from PIL import Image, ImageTk
 import configparser
 import os
-# import shutil
 from collections import Counter
-from utils import date_from_filename
 from datetime import datetime
+from tkinter import *
+from tkinter.ttk import *
+
+from PIL import Image, ImageTk
 from tinydb import TinyDB, Query
+
+from utils import date_from_filename
 
 
 class IntScroller(Frame):
+    # TODO: test
+    # Some simple test to ensure that the textvariable is suitable updated
+    # check works for non-default delta, negative delta etc
+    # Check bounds are upheld
     def __init__(self, master, **kwargs):
         super().__init__(master)
         # Todo: add some fancy backdrop graphics with a holding label
         # self.backdrop = Label(self)
 
+        # define from_ < to, even for negative increment
         self.min = kwargs.pop('from_', 0)
         self.max = kwargs.pop('to', 5)
         self.increment = kwargs.pop('increment', 1)
         self.var = kwargs.pop('textvariable', IntVar())
+
+        # Defaulting to min, may want to do something funky for negative increment?
+        value = kwargs.pop('value', self.min)
+        # Clamp value to range
+        value = min(self.max, max(value, self.min))
+        # TODO: this feels a little funky, having the IntScroller set the value in the model?
+        self.var.set(value)
 
         self.up_button = Button(self, text='\u25b2', command=self.inc, **kwargs)
         self.text = Entry(self, textvariable=self.var, justify=CENTER, **kwargs)
@@ -62,25 +74,30 @@ class IntScroller(Frame):
         #     width, wrap,
 
     def inc(self):
-        old_val = self.var.get()
-        # Todo: This test is assuming increment>0, I think. Might want to reassess
-        if old_val <= (self.max - self.increment):
-            self.var.set(old_val + self.increment)
+        value = self.var.get() + self.increment
+        value = min(self.max, max(value, self.min))
+        self.var.set(value)
 
     def dec(self):
-        old_val = self.var.get()
-        if old_val >= (self.min + self.increment):
-            self.var.set(old_val - self.increment)
-
-    pass
+        value = self.var.get() - self.increment
+        value = min(self.max, max(value, self.min))
+        self.var.set(value)
 
 
 class Hearthstone:
 
     # Abstract class intended to contain hearthstone properties that many classes need access to
-    # --> rarities is a great examaple of this, now accessable through Hearthstone.rarities
+    # Basically working as a container for constants about the game itself
+    # --> rarities is a great example of this, now accessable through Hearthstone.rarities
     rarities = ['common', 'rare', 'epic', 'legendary',
-                     'golden_common', 'golden_rare', 'golden_epic', 'golden_legendary']
+                'golden_common', 'golden_rare', 'golden_epic', 'golden_legendary']
+    default_pack = {'common': 4, 'rare': 1, 'epic': 0, 'legendary': 0,
+                    'golden_common': 0, 'golden_rare': 0, 'golden_epic': 0, 'golden_legendary': 0}
+    disenchant_values = {'common': 5, 'rare': 20, 'epic': 100, 'legendary': 400,
+                         'golden_common': 50, 'golden_rare': 100, 'golden_epic':400, 'golden_legendary':1600}
+    enchant_values = {'common': 40, 'rare': 100, 'epic': 400, 'legendary': 1600,
+                      'golden_common': 400, 'golden_rare': 800, 'golden_epic': 1600, 'golden_legendary': 3200}
+    # TODO: perhaps card_sets belongs in here too, something like Hearthstone.standard_sets / wild_set / all_sets
 
 
 # Todo: Probably want a rename, given we aren't assuming it's a pack any more
@@ -93,7 +110,6 @@ class CardPack:
         # Todo: datetime module wants ints, not strings, so is a bit of a pain
         # --> May want to reevaluate implementation of the sortkey
         self.sortkey = date_from_filename(file_path)
-
         self.date_time = datetime(*[int(val) for val in self.sortkey.split('/')])
         self.date = self.date_time.date()
         self.time = self.date_time.time()
@@ -114,11 +130,19 @@ class View(Frame):
         self.subpage_button_frame = None
         self.active_subpage = None
 
-    def add_subpage(self, factory):
+    # TODO: test
+    # Do we test on the base class, or on a derivative of it?
+    # Subpage is returned
+    # Ensure button does things?
+
+    # TODO: from trying to envisage tests, this seems to do a LOT for one method
+    # --> is this a problem?
+    def add_subpage(self, constructor):
         if not self.active_subpage:
+            # subpage variable is needed, if none, supply one
             self.active_subpage = StringVar()
         # We assume these have been set by now
-        subpage = factory(self.subpage_frame)
+        subpage = constructor(self.subpage_frame)
         self.subpages[subpage.name] = subpage
         subpage.grid(row=0, column=0, sticky=NSEW)
         self.subpage_frame.columnconfigure(0, weight=1)
@@ -128,14 +152,20 @@ class View(Frame):
         button.grid(row=0, column=btn_idx, padx=20, sticky=NSEW)
         self.subpage_buttons.append(button)
         self.columnconfigure(btn_idx, weight=1)
+
+        self.active_subpage.set(subpage.name)
         return subpage
 
+    # TODO: test?
+    # hard to test that the page is actually raised, unless we can get some height info somehow
+    # can definitely test the variable is updated correctly
     def raise_view(self, subpage_name):
         frame = self.subpages[subpage_name]
-        # Every subpaged view requires a variable. If not needed, need to pass a blank StringVar()
         self.active_subpage.set(subpage_name)
         frame.tkraise()
 
+    # TODO: test
+    # Will be tested in the background of testing the raise funcitons & things
     def bind_subpage_variable(self, subpage_var):
         self.active_subpage = subpage_var
 
@@ -190,6 +220,9 @@ class StatsView(View):
         self.columnconfigure(2, weight=1)
         self.columnconfigure(3, weight=1)
 
+    # TODO: test
+    # Ensure the set selector is present (children of View list ?)
+    # Verify the selector options are correct
     def add_set_selector(self, model_variable, standard, wild):
         # Adding in some space padding to avoid an issue with tkinter
         # AS 2 OptionMenus would have some of the same items, highlight tick cross-updates
@@ -201,14 +234,21 @@ class StatsView(View):
         self.set_selector = set_selector
         pass
 
+    # TODO: test
+    # set the variable, change it, and then see if the label is updated?
+    # Should be able to pull the text from the Label, presumably
     def bind_pack_number(self, variable):
         # binds the variable as the value for the pack number display
         self.total_packs_number.config(textvariable=variable)
 
+    # TODO: test
+    # same as pack_number
     def bind_total_cards_numbers(self, variable_dict):
         for rarity in Hearthstone.rarities:
             self.total_numbers[rarity].config(textvariable=variable_dict[rarity])
 
+    # TODO: test
+    # again, same as above 2
     def bind_mean_cards_numbers(self, variable_dict):
         for rarity in Hearthstone.rarities:
             self.mean_numbers[rarity].config(textvariable=variable_dict[rarity])
@@ -225,13 +265,11 @@ class PackView(View):
         self.subpages = {}
         self.subpage_buttons = []
         self.active_subpage = None
+        self.image = None
 
-        # Todo: Either a proper placeholder, or generate a blank image?
-        image = Image.open("E:\\Users\\Richard\\Desktop\\GUI_Sandbox\\Placeholder.png")
-        image = image.resize((700, 394), Image.ANTIALIAS)
-        photo = ImageTk.PhotoImage(image)
-        self.image_frame = Label(self, image=photo)
-        self.image_frame.image = photo
+        self.image_frame = Label(self)
+        image = Image.new('RGB', (1920, 1080))
+        self.set_image(image)
         self.image_frame.grid(row=0, column=0, columnspan=4, pady=20)
 
         self.subpage_button_frame = Frame(self)
@@ -249,6 +287,8 @@ class PackView(View):
         self.columnconfigure(2, weight=1)
         self.columnconfigure(3, weight=1)
 
+    # Todo: test?
+    # check is sized correctly?
     def set_image(self, image):
         # takes the result of Image.open, and pushes result to the image frame
         sized_image = image.resize((700, 394), Image.ANTIALIAS)
@@ -277,6 +317,8 @@ class PackMiniView(View):
         self.columnconfigure(2, weight=1)
         self.columnconfigure(3, weight=1)
 
+    # TODO: test
+    # verify scrollvars are unpacked correctly
     def add_scrollers(self, scrollvars):
         for rarity in Hearthstone.rarities:
             self.rarity_scrollers.update({rarity: IntScroller(self, textvariable=scrollvars[rarity], width=2)})
@@ -291,11 +333,17 @@ class PackMiniView(View):
         self.rarity_scrollers['golden_epic'].grid(row=1, column=2, pady=10)
         self.rarity_scrollers['golden_legendary'].grid(row=1, column=3, pady=10)
 
+    # TODO: test
+    # Set selector added, options correct, bound to variable right
     def add_set_selector(self, model_variable, standard, wild):
         set_selector = OptionMenu(self, model_variable, "Card Set", *standard, *wild)
         set_selector['menu'].insert_separator(len(standard))
         set_selector.grid(row=2, column=1, columnspan=2, pady=20)
+        self.set_selector = set_selector
 
+
+# Note: arena rewards got a rework Aug 11
+# For presentation, will need separate logic before + after
 
 class ArenaMiniView(View):
     def __init__(self, master):
@@ -346,6 +394,7 @@ class OtherMiniView(View):
         self.rowconfigure(0, weight=1)
         self.columnconfigure(0, weight=1)
 
+    # TODO: set selector is a little bit WET, may want a very minor refactor
     def add_selector(self, variable, *options):
         # Folder selection is a dropdown of any output folder not in ['packs', 'arena', 'rewards']
         # Selection of a folder, and hitting save just auto-routes the image to the correct folder
@@ -354,7 +403,7 @@ class OtherMiniView(View):
         self.folder_selection.grid()
 
 
-# Main GUI view, manages the switching between other Top level views
+# Main GUI view, mainly as a container so the subpage methods can be used for the separate views
 class MainView(View):
     def __init__(self, master):
         super().__init__(master)
@@ -367,18 +416,25 @@ class MainView(View):
         self.subpage_frame.grid(row=1, column=0)
 
 
+# TODO: opening of TinyDB is done manually in the 3 places it occurs
+# Investigate if this can be made DRY
+
+# TODO: Model is currently a big blob, could really be split up a little
 # designed to hold the back-bone logic of the whole shebang
 
 # Controller passes a config, from which the model extracts a lot of info
 # model will then go and grab the files it needs to hold
 class Model:
 
+    # TODO: test
+    # config parsed and things are extracted
+    # Tinydb data is extracted correctly
+    # Verify all the 'Var's are present and correct?
+    # Check trace_variable is bound correctly - could overload the self.extract_data with a testing function
     def __init__(self, config):
         self.config = config
 
-        db_file = self.config['filepaths']['tinydb']
-        db = TinyDB(db_file)
-        self.card_table = db.table('card_data')
+        self.db_file = self.config['filepaths']['tinydb']
 
         self.packs = []
         self.current_pack = None
@@ -388,8 +444,6 @@ class Model:
 
         self.acronyms = dict(config['sets_wild'].items())
         self.acronyms.update(config['sets_standard'].items())
-
-        self.default_pack = {'common': 4, 'rare': 1}
 
         self.image = None
 
@@ -436,6 +490,9 @@ class Model:
 
         pass
 
+    # TODO: test
+    # Ensure functions correctly - doesn't false-match, gets 'em all
+    # Verify the list is sorted correctly
     def find_images(self):
         """Finds all the screenshots on the desktop that might be packs, and stores them"""
         desktop_path = self.config['filepaths']['desktop']
@@ -445,11 +502,14 @@ class Model:
                 self.packs.append(CardPack(file, desktop_path))
         # reverse so pop can be used to get in order
         self.packs.sort(key=lambda pack: pack.sortkey, reverse=True)
-        print(self.packs)
 
-        pass
-
+    # TODO: test
+    # moves to next pack
+    # handles the no-more-packs situation correctly
     def next_pack(self):
+        # closing images once we're done with them
+        if self.current_pack:
+            self.image.close()
         # moves onto the next pack in the list, updating image as well
         try:
             self.current_pack = self.packs.pop()
@@ -463,15 +523,21 @@ class Model:
 
         self.reset_variables()
 
+    # TODO: test
+    # ensure that after this is run, any contents are wiped
+    # Ensure defaults are in correct boxes
     def reset_variables(self):
         # Resetting some variables back to default values
         for rarity in Hearthstone.rarities:
+            # Todo: default pack, move to Hearthstone class?
             # get default contents of pack, assumes 0 of any not specified
-            default = self.default_pack.get(rarity, 0)
+            default = Hearthstone.default_pack[rarity]
             self.quantities[rarity].set(default)
         self.notes.set('')
         # Note: self.card_set is not reset, assumes multiple packs of same set most likely
 
+    # TODO: this model-level validation is the last bastion
+    # --> need not be the only one, if the Controller can do it, might be worth
     def is_valid_pack(self):
         # Todo: ideally we'd throw the user some information as to why it fails
         # --> Not core requirement, I will know what's up
@@ -486,12 +552,26 @@ class Model:
             #  NOT ENOUGH CARDS
             return False
 
+        if self.quantities['common'].get() == 5:
+            # ALL COMMONS NOT VALID
+            return False
+
         if (self.quantities['legendary'].get() + self.quantities['golden_epic'].get() +
                 self.quantities['golden_legendary'].get() > 0) and (self.notes.get() == ''):
             # NOTEWORTHY CARD NOT NOTED
             return False
 
         return True
+
+    # TODO: test
+    # TinyDB file should be updated with the pack data
+    # TinyDB should be using the correct table for the data
+    # image should be moved to the correct folder, according to the word of the config
+    # directories should be made if not present
+
+    # TODO: storing the data to the database, and moving the file
+    # should be separate both from each other and from the main 'submit' method
+    # imagine we were moving both into web-based databasing
 
     # Should the correct submission process be the responsibility of Model or Controller?
     def submit(self):
@@ -500,11 +580,13 @@ class Model:
 
         # Todo: somehow check the current subpage, and modify behaviour accordingly
 
-        self.card_table.insert({
-            'date': self.current_pack.sortkey,
-            **{rarity: self.quantities[rarity].get() for rarity in Hearthstone.rarities},
-            'notes': self.notes.get(), 'set': self.acronyms[self.card_set.get()]
-        })
+        with TinyDB(self.db_file) as db:
+            card_table = db.table('card_data')
+            card_table.insert({
+                'date': self.current_pack.sortkey,
+                **{rarity: self.quantities[rarity].get() for rarity in Hearthstone.rarities},
+                'notes': self.notes.get(), 'set': self.acronyms[self.card_set.get()]
+            })
 
         pack_folder = self.config['output']['packs']
         dest_folder = os.path.join(pack_folder, str(self.current_pack.date.year))
@@ -522,6 +604,9 @@ class Model:
 
         self.next_pack()
 
+    # TODO: test
+    # pack is not moved, and the next image is loaded in
+    # Really weak test, but especially if this gets more complex, would be nice to be sure
     def not_pack(self):
         # "Not pack" will likely be removed and made into "skip".
         # Images for things other than packs will have a sub page of the storage screen
@@ -530,6 +615,10 @@ class Model:
     # Another alias. Can be cleaned up when refactoring if needed
     skip_image = next_pack
 
+    # TODO: test
+    # When passed a set name, ensure it pulls back only for that set
+    # Handles no data being found for the given set sensibly
+    # Handles case for no option selected, 'Card Set'
     def extract_data(self, *callback):
         # called when the view_card_set variable changes
         # looks at the new value, and determines if it is a set, or 'All Sets'
@@ -543,11 +632,15 @@ class Model:
         if set_name == 'Card Set':
             return
         elif set_name == 'All Sets':  # case looking for all packs handled separately
-            results = self.card_table.all()
+            with TinyDB(self.db_file) as db:
+                card_table = db.table('card_data')
+                results = card_table.all()
         else:
             acronym = self.acronyms[set_name]
             pack = Query()
-            results = self.card_table.search(pack['set'] == acronym)
+            with TinyDB(self.db_file) as db:
+                card_table = db.table('card_data')
+                results = card_table.search(pack['set'] == acronym)
 
         total_packs = len(results)
         count = Counter()
@@ -565,15 +658,7 @@ class Model:
 
 # GUI class acts as the controller, reacting to changes in the view, and updating the model accordingly
 class GUI:
-    def __init__(self, master):
-
-        # using configparser, can load in the .ini file
-        config = configparser.ConfigParser(allow_no_value=True)
-        # Override the default behaviour, which is to strip case
-        config.optionxform = str
-        config.read('../PacksGUI_conf.ini')
-        # can then read in data with things like config['filepaths']['desktop']
-        # DEFAULT is a magic-section for ini, which acts as info for any section
+    def __init__(self, master, config):
 
         self.model = Model(config)
         self.master = master
@@ -600,15 +685,16 @@ class GUI:
         menu_edit = Menu(menubar, tearoff=0)
         menubar.add_cascade(menu=menu_file, label='File')
         menubar.add_cascade(menu=menu_edit, label='Edit')
-        menu_file.add_command(label="Hey There!", command=lambda:print('hello'))
-        root['menu'] = menubar
+        menu_file.add_command(label="Hey There!", command=lambda: print('hello'))
+        self.master['menu'] = menubar
 
     def configure_pack_view(self):
         # ~~ Main pack view ~~
         self.pack_view.submit_button.config(command=self.submit)
+        # Self methods, rather than model so we can hook in to update image
+        # Todo: should we hook the image update in as a variable binging?
         self.pack_view.not_pack_button.config(command=self.not_pack)
         self.update_image()
-
         self.pack_view.bind_subpage_variable(self.model.current_subpage)
 
         # ~~ Pack subpage ~~
@@ -626,7 +712,8 @@ class GUI:
         other_subpage = self.pack_view.add_subpage(OtherMiniView)
         # Todo: work out where folders are read from config and passed here
         # other_subpage.add_selector()
-        self.pack_view.raise_view('Packs')
+
+        self.pack_view.raise_view(pack_subpage.name)
 
     def configure_stats_view(self):
         self.stats_view.add_set_selector(self.model.view_card_set, self.model.standard_sets, self.model.wild_sets)
@@ -639,9 +726,12 @@ class GUI:
         pass
 
     def update_image(self):
-        #Todo: handle no images found
-        self.pack_view.set_image(self.model.image)
+        try:
+            self.pack_view.set_image(self.model.image)
+        except AttributeError: # Handling no image found, generating a black image for now
+            self.pack_view.set_image(Image.new('RGB', (1920, 1080)))
 
+    # TODO: probably want a rename for this, given it's now going to be not pack, not arena, not EoS etc
     def not_pack(self):
         self.model.next_pack()
         self.update_image()
@@ -666,8 +756,40 @@ class GUI:
         pass
 
 
+# TODO: before changing things that start actually interacting with the filesystem, need some tests
+# Tests SHOULD be able to load in just the model, and effectively simulate a user
+# Button presses on the interface should only ever be effecting the model
+# --> not_pack does call a GUI method, for updating image, not a huge sticking point
+# Tests should be able to see that the program moves files as expected, and then move 'em back
+# Probably just a single image
+# Random tests can make up the filename, and meta data, and watch as the system stores it
+# Test different config options all work
+# Test that the database is correctly updated for the submissions
+# Check data verification works
+
+# Todo: one test per source file seems like a standard practice
+# One file per source file, with a test set per source class
+# --> Some other nest another test class inside, for each method, probs overkill here, but maybe
+# --> If tests need setup or 2 types, 2 classes works better
+# Shouldn't be too hard to mirror refactoring that way, just got to check top level class contents of the two files
+# Majority of tests will be for model, presumably
+
+# https://github.com/sloria/TextBlob/tree/dev/textblob
+# random repo to see some style, uses Nose, but close enough
 if __name__ == '__main__':
     # create a root window, set up the GUI in that window, and run
     root = Tk()
-    my_gui = GUI(root)
+
+    # Todo: when packaged up, have a method that sets the config file
+    # --> all things that use config would have to be made after this, or updated :/
+
+
+    # using configparser, can load in the .ini file
+    configuration = configparser.ConfigParser(allow_no_value=True)
+    # Override the default behaviour, which is to strip case
+    configuration.optionxform = str
+    configuration.read('../PacksGUI_conf.ini')
+    # can then read in data with things like config['filepaths']['desktop']
+    # DEFAULT is a magic-section for ini, which acts as info for any section
+    my_gui = GUI(root, configuration)
     root.mainloop()
