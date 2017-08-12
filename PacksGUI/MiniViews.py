@@ -15,6 +15,7 @@ class PackMiniView(View):
 
         self.rarity_values = {}
         self.rarity_scrollers = {}
+        self.set_selector = None
 
         self.notes_label = Label(self, text="Notes:")
         self.notes_label.grid(row=3, column=0, columnspan=4)
@@ -25,20 +26,26 @@ class PackMiniView(View):
         self.columnconfigure(1, weight=1)
         self.columnconfigure(2, weight=1)
         self.columnconfigure(3, weight=1)
+        # Adding a 5th column, for push scrollers left, little janky but looks acceptable
+        self.columnconfigure(4, weight=1)
 
     def add_scrollers(self, scrollvars):
+        rarity_names = {'common': 'Common', 'rare': 'Rare', 'epic': 'Epic', 'legendary': 'Legendary',
+                        'golden_common': 'Golden\nCommon', 'golden_rare': 'Golden\nRare',
+                        'golden_epic': 'Golden\nEpic', 'golden_legendary': 'Golden\nLegendary'}
         for rarity in Hearthstone.rarities:
-            self.rarity_scrollers.update({rarity: IntScroller(self, textvariable=scrollvars[rarity], width=2)})
+            self.rarity_scrollers.update({rarity: IntScroller(self, textvariable=scrollvars[rarity],
+                                                              label=rarity_names[rarity], width=2)})
 
-        self.rarity_scrollers['common'].grid(row=0, column=0, pady=10)
-        self.rarity_scrollers['rare'].grid(row=0, column=1, pady=10)
-        self.rarity_scrollers['epic'].grid(row=0, column=2, pady=10)
-        self.rarity_scrollers['legendary'].grid(row=0, column=3, pady=10)
+        self.rarity_scrollers['common'].grid(row=0, column=0, pady=10, sticky=E)
+        self.rarity_scrollers['rare'].grid(row=0, column=1, pady=10, sticky=E)
+        self.rarity_scrollers['epic'].grid(row=0, column=2, pady=10, sticky=E)
+        self.rarity_scrollers['legendary'].grid(row=0, column=3, pady=10, sticky=E)
 
-        self.rarity_scrollers['golden_common'].grid(row=1, column=0, pady=10)
-        self.rarity_scrollers['golden_rare'].grid(row=1, column=1, pady=10)
-        self.rarity_scrollers['golden_epic'].grid(row=1, column=2, pady=10)
-        self.rarity_scrollers['golden_legendary'].grid(row=1, column=3, pady=10)
+        self.rarity_scrollers['golden_common'].grid(row=1, column=0, pady=10, sticky=E)
+        self.rarity_scrollers['golden_rare'].grid(row=1, column=1, pady=10, sticky=E)
+        self.rarity_scrollers['golden_epic'].grid(row=1, column=2, pady=10, sticky=E)
+        self.rarity_scrollers['golden_legendary'].grid(row=1, column=3, pady=10, sticky=E)
 
     def add_set_selector(self, model_variable, standard, wild):
         set_selector = OptionMenu(self, model_variable, "Card Set", *standard, *wild)
@@ -105,5 +112,3 @@ class OtherMiniView(View):
         # Config is used by the model to determine any sub-folders by year/month
         self.folder_selection = OptionMenu(self, variable, "Folder", *options)
         self.folder_selection.grid()
-
-

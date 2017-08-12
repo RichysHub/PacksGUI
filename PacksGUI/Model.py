@@ -221,5 +221,3 @@ class Model:
                 self.viewed_mean_quantities[rarity].set('###')
             else:
                 self.viewed_mean_quantities[rarity].set('{:.3f}'.format(float(count[rarity])/total_packs))
-
-

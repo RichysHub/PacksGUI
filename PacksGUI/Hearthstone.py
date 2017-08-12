@@ -3,8 +3,12 @@ class Hearthstone:
     # Abstract class intended to contain hearthstone properties that many classes need access to
     # Basically working as a container for constants about the game itself
     # --> rarities is a great example of this, now accessable through Hearthstone.rarities
+
+    # TODO: perhaps separate names rarities, for UI pieces
     rarities = ['common', 'rare', 'epic', 'legendary',
                 'golden_common', 'golden_rare', 'golden_epic', 'golden_legendary']
+
+    # TODO: maybe these things should use a dict(zip()), so rarity names are only in 1 place
     default_pack = {'common': 4, 'rare': 1, 'epic': 0, 'legendary': 0,
                     'golden_common': 0, 'golden_rare': 0, 'golden_epic': 0, 'golden_legendary': 0}
     disenchant_values = {'common': 5, 'rare': 20, 'epic': 100, 'legendary': 400,

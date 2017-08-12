@@ -1,4 +1,4 @@
-from tkinter import IntVar, Entry, CENTER, TOP, Frame
+from tkinter import IntVar, Entry, CENTER, RIGHT, LEFT, Frame, Tk, Label
 from tkinter.ttk import Button
 
 
@@ -12,21 +12,35 @@ class IntScroller(Frame):
         self.max = kwargs.pop('to', 5)
         self.increment = kwargs.pop('increment', 1)
         self.var = kwargs.pop('textvariable', IntVar())
-
         # Defaulting to min if no starting value given
         value = kwargs.pop('value', self.min)
+        label_text = kwargs.pop('label', None)
+
         # Clamp value to range
         value = min(self.max, max(value, self.min))
+
         # TODO: this feels a little funky, having the IntScroller set the value in the model?
         self.var.set(value)
 
-        self.up_button = Button(self, text='\u25b2', command=self.inc, **kwargs)
-        self.text = Entry(self, textvariable=self.var, justify=CENTER, **kwargs)
-        self.down_button = Button(self, text='\u25bc', command=self.dec, **kwargs)
+        right_frame = Frame(self)
 
-        self.up_button.pack(side=TOP)
-        self.text.pack(side=TOP)
-        self.down_button.pack(side=TOP)
+        if label_text:
+            left_frame = Frame(self)
+            self.label = Label(left_frame, text=label_text, justify=RIGHT)
+            self.label.pack()
+            left_frame.pack(side=LEFT)
+        else:
+            self.label = None
+
+        self.up_button = Button(right_frame, text='\u25b2', command=self.inc, **kwargs)
+        self.text = Entry(right_frame, textvariable=self.var, justify=CENTER, state='readonly', **kwargs)
+        self.down_button = Button(right_frame, text='\u25bc', command=self.dec, **kwargs)
+
+        self.up_button.grid(row=0)
+        self.text.grid(row=1)
+        self.down_button.grid(row=2)
+        right_frame.pack(side=LEFT)
+
 
         # Copied from spindown, hoping to implement similar options for compatibility
         #
@@ -63,3 +77,21 @@ class IntScroller(Frame):
         value = self.var.get() - self.increment
         value = min(self.max, max(value, self.min))
         self.var.set(value)
+
+if __name__ == '__main__':
+    # Simple testbed, for quick viewing of changes
+    root = Tk()
+    frame = Frame(root)
+    frame.pack(padx=100, pady=100)
+
+    textless = IntScroller(frame, from_=0, to=5, value=10, width=2)
+    text = IntScroller(frame, from_=0, to=5, value=10, width=2, label='Epic')
+    negative_increment = IntScroller(frame, from_=0, to=25, value=25, width=3, increment=-1, label='Rank')
+    multiple_increment = IntScroller(frame, from_=0, to=30, value=10, width=2, increment=2)
+
+    textless.pack()
+    text.pack()
+    negative_increment.pack()
+    multiple_increment.pack()
+
+    root.mainloop()

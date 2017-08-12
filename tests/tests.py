@@ -10,7 +10,7 @@ from PIL import Image
 from tinydb import TinyDB
 
 import CardPack
-import IntScroller
+from IntScroller import IntScroller
 import MiniViews
 import Model
 import FullViews
@@ -31,32 +31,32 @@ class TestIntScroller(unittest.TestCase):
         self.root = tkinter.Tk()
 
     def test_allotted_integer_variable_type(self):
-        scroller = IntScroller.IntScroller(self.root)
+        scroller = IntScroller(self.root)
         variable = scroller.var
         self.assertIsInstance(variable, tkinter.IntVar)
 
     def test_default_value(self):
         expected_value = 3
-        scroller = IntScroller.IntScroller(self.root, value=expected_value, from_=0, to=5)
+        scroller = IntScroller(self.root, value=expected_value, from_=0, to=5)
         value = scroller.var.get()
         self.assertEqual(value, expected_value)
 
     def test_default_above_range(self):
         # Value should be clamped to the range, regardless of erroneous default
         to_value = 5
-        scroller = IntScroller.IntScroller(self.root, value=to_value + 1, from_=0, to=to_value, increment=1)
+        scroller = IntScroller(self.root, value=to_value + 1, from_=0, to=to_value, increment=1)
         value = scroller.var.get()
         self.assertEqual(value, to_value)
 
     def test_default_below_range(self):
         from_value = 0
-        scroller = IntScroller.IntScroller(self.root, value=from_value - 1, from_=from_value, to=5, increment=1)
+        scroller = IntScroller(self.root, value=from_value - 1, from_=from_value, to=5, increment=1)
         value = scroller.var.get()
         self.assertEqual(value, from_value)
 
     def test_increment(self):
         increment = 1
-        scroller = IntScroller.IntScroller(self.root, from_=0, increment=1, to=5, value=3)
+        scroller = IntScroller(self.root, from_=0, increment=1, to=5, value=3)
         initial_value = scroller.var.get()
         scroller.inc()
         result_value = scroller.var.get()
@@ -64,7 +64,7 @@ class TestIntScroller(unittest.TestCase):
 
     def test_decrement(self):
         increment = 1
-        scroller = IntScroller.IntScroller(self.root, from_=0, increment=1, to=5, value=3)
+        scroller = IntScroller(self.root, from_=0, increment=1, to=5, value=3)
         initial_value = scroller.var.get()
         scroller.dec()
         result_value = scroller.var.get()
@@ -72,13 +72,13 @@ class TestIntScroller(unittest.TestCase):
 
     def test_increment_above_bounds(self):
         to_value = 5
-        scroller = IntScroller.IntScroller(self.root, from_=0, to=to_value, value=to_value, increment=1)
+        scroller = IntScroller(self.root, from_=0, to=to_value, value=to_value, increment=1)
         scroller.inc()
         self.assertEqual(scroller.var.get(), to_value)
 
     def test_decrement_below_bounds(self):
         from_value = 0
-        scroller = IntScroller.IntScroller(self.root, from_=from_value, to=5, value=from_value, increment=1)
+        scroller = IntScroller(self.root, from_=from_value, to=5, value=from_value, increment=1)
         scroller.dec()
         self.assertEqual(scroller.var.get(), from_value)
 
@@ -86,7 +86,7 @@ class TestIntScroller(unittest.TestCase):
         # In use cases where Up arrow should decrease the number on the IntScroller
         # Example case would be for end of season rank, Rank 1 'higher' than Rank 25
         increment = -1
-        scroller = IntScroller.IntScroller(self.root, from_=0, increment=increment, to=5, value=3)
+        scroller = IntScroller(self.root, from_=0, increment=increment, to=5, value=3)
         initial_value = scroller.var.get()
         scroller.inc()
         result_value = scroller.var.get()
@@ -94,7 +94,7 @@ class TestIntScroller(unittest.TestCase):
 
     def test_negative_step_decrement(self):
         increment = -1
-        scroller = IntScroller.IntScroller(self.root, from_=0, increment=increment, to=5, value=3)
+        scroller = IntScroller(self.root, from_=0, increment=increment, to=5, value=3)
         initial_value = scroller.var.get()
         scroller.dec()
         result_value = scroller.var.get()
@@ -102,15 +102,23 @@ class TestIntScroller(unittest.TestCase):
 
     def test_negative_increment_below_bounds(self):
         from_value = 0
-        scroller = IntScroller.IntScroller(self.root, from_=from_value, to=5, value=from_value, increment=-1)
+        scroller = IntScroller(self.root, from_=from_value, to=5, value=from_value, increment=-1)
         scroller.inc()
         self.assertEqual(scroller.var.get(), from_value)
 
     def test_negative_decrement_above_bounds(self):
         to_value = 5
-        scroller = IntScroller.IntScroller(self.root, from_=0, to=to_value, value=to_value, increment=-1)
+        scroller = IntScroller(self.root, from_=0, to=to_value, value=to_value, increment=-1)
         scroller.dec()
         self.assertEqual(scroller.var.get(), to_value)
+
+    def test_creates_label(self):
+        scroller = IntScroller(self.root, label='Label')
+        self.assertIsInstance(scroller.label, tkinter.Label)
+
+    def test_ignore_no_label(self):
+        scroller = IntScroller(self.root)
+        self.assertIsNone(scroller.label)
 
 
 class TestCardPack(unittest.TestCase):
@@ -291,7 +299,7 @@ class TestPackMiniView(unittest.TestCase):
 
         for rarity in Hearthstone.rarities:
             with self.subTest(rarity=rarity):
-                self.assertIsInstance(self.view.rarity_scrollers[rarity], IntScroller.IntScroller, rarity)
+                self.assertIsInstance(self.view.rarity_scrollers[rarity], IntScroller, rarity)
 
     def test_scroll_variables_unpacked(self):
         scrollvars = {rarity: tkinter.StringVar() for rarity in Hearthstone.rarities}

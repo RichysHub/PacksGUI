@@ -87,7 +87,8 @@ class GUI:
     def update_image(self):
         try:
             self.pack_view.set_image(self.model.image)
-        except AttributeError: # Handling no image found, generating a black image for now
+        except (AttributeError, ValueError):
+            # Handling no image found, or last image closed, generating a black image for now
             self.pack_view.set_image(Image.new('RGB', (1920, 1080)))
 
     # TODO: probably want a rename for this, given it's now going to be not pack, not arena, not EoS etc
