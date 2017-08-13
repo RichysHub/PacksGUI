@@ -20,7 +20,7 @@ class IntScroller(Frame):
         value = min(self.max, max(value, self.min))
 
         # TODO: this feels a little funky, having the IntScroller set the value in the model?
-        self.var.set(value)
+        self.set(value)
 
         right_frame = Frame(self)
 
@@ -40,6 +40,11 @@ class IntScroller(Frame):
         self.text.grid(row=1)
         self.down_button.grid(row=2)
         right_frame.pack(side=LEFT)
+
+        self.bind('<Key>', self.master.key_pressed)  # pass keypresses to parent
+        self.up_button.bind('<Key>', self.master.key_pressed)
+        self.down_button.bind('<Key>', self.master.key_pressed)
+        self.text.bind('<Key>', self.master.key_pressed)
 
 
         # Copied from spindown, hoping to implement similar options for compatibility
@@ -77,6 +82,17 @@ class IntScroller(Frame):
         value = self.var.get() - self.increment
         value = min(self.max, max(value, self.min))
         self.var.set(value)
+
+    def set(self, value):
+        self.var.set(value)
+
+    def activate(self):
+        self.text.config(fg='red')
+
+    def deactivate(self):
+        self.text.config(fg='black')
+
+
 
 if __name__ == '__main__':
     # Simple testbed, for quick viewing of changes

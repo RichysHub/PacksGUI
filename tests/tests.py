@@ -12,7 +12,7 @@ from tinydb import TinyDB
 import CardPack
 from IntScroller import IntScroller
 import MiniViews
-import Model
+from Model import Model
 import FullViews
 import layout_test
 from Hearthstone import Hearthstone
@@ -29,6 +29,9 @@ class TestIntScroller(unittest.TestCase):
 
     def setUp(self):
         self.root = tkinter.Tk()
+        # TODO: find why this press is generated, can we avoid it?
+        # Have to provide dummy key_pressed function
+        self.root.key_pressed = lambda *args: None
 
     def test_allotted_integer_variable_type(self):
         scroller = IntScroller(self.root)
@@ -119,6 +122,27 @@ class TestIntScroller(unittest.TestCase):
     def test_ignore_no_label(self):
         scroller = IntScroller(self.root)
         self.assertIsNone(scroller.label)
+
+    def test_activation_deactivation(self):
+        scroller = IntScroller(self.root)
+        scroller.activate()
+        self.assertEqual(scroller.text['foreground'], 'red')
+        scroller.deactivate()
+        self.assertEqual(scroller.text['foreground'], 'black')
+
+    def test_components_key_bound(self):
+        scroller = IntScroller(self.root)
+        # tkinter doesn't expose a good method to find the binding, but we can check it is bound
+        self.assertIsNot(scroller.up_button.bind('<Key>'), '')
+        self.assertIsNot(scroller.down_button.bind('<Key>'), '')
+        self.assertIsNot(scroller.text.bind('<Key>'), '')
+        self.assertIsNot(scroller.bind('<Key>'), '')
+
+    def test_set_correctly_sets(self):
+        scroller = IntScroller(self.root, value=0)
+        self.assertEqual(scroller.var.get(), 0)
+        scroller.set(5)
+        self.assertEqual(scroller.var.get(), 5)
 
 
 class TestCardPack(unittest.TestCase):
@@ -288,13 +312,17 @@ class TestPackView(unittest.TestCase):
 
 class TestPackMiniView(unittest.TestCase):
 
+    class KeyPress:
+        def __init__(self, character):
+            self.char = character
+
     def setUp(self):
         root = tkinter.Tk()
         # Wouldn't normally instantiate as top level, but can do
         self.view = MiniViews.PackMiniView(root)
 
     def test_scrollers_created(self):
-        scrollvars = {rarity: tkinter.StringVar() for rarity in Hearthstone.rarities}
+        scrollvars = {rarity: tkinter.IntVar() for rarity in Hearthstone.rarities}
         self.view.add_scrollers(scrollvars)
 
         for rarity in Hearthstone.rarities:
@@ -302,7 +330,7 @@ class TestPackMiniView(unittest.TestCase):
                 self.assertIsInstance(self.view.rarity_scrollers[rarity], IntScroller, rarity)
 
     def test_scroll_variables_unpacked(self):
-        scrollvars = {rarity: tkinter.StringVar() for rarity in Hearthstone.rarities}
+        scrollvars = {rarity: tkinter.IntVar() for rarity in Hearthstone.rarities}
         self.view.add_scrollers(scrollvars)
 
         for rarity in Hearthstone.rarities:
@@ -316,14 +344,69 @@ class TestPackMiniView(unittest.TestCase):
         self.view.add_set_selector(variable, standard, wild)
         self.assertIsInstance(self.view.set_selector, tkinter.ttk.OptionMenu)
 
+    def test_first_scroller_activated(self):
+        scrollvars = {rarity: tkinter.IntVar() for rarity in Hearthstone.rarities}
+        self.view.add_scrollers(scrollvars)
+
+        for rarity in Hearthstone.rarities:
+            with self.subTest(rarity=rarity):
+                if rarity == 'common':
+                    self.assertEqual(self.view.rarity_scrollers[rarity].text['foreground'], 'red')
+                else:
+                    self.assertNotEqual(self.view.rarity_scrollers[rarity].text['foreground'], 'red')
+
+    def test_handles_number_keys(self):
+        scrollvars = {rarity: tkinter.IntVar() for rarity in Hearthstone.rarities}
+        self.view.add_scrollers(scrollvars)
+
+        for value in range(5):
+            with self.subTest(value=value):
+                key_press = self.KeyPress(str(value))
+                self.view.key_pressed(key_press)
+                rarity = Hearthstone.rarities[value]
+                self.assertEqual(scrollvars[rarity].get(), value)
+                self.assertEqual(self.view.rarity_scrollers[rarity].text['foreground'], 'black')
+                self.assertEqual(self.view.rarity_scrollers[Hearthstone.rarities[value+1]].text['foreground'], 'red')
+
+    def test_handles_backspace(self):
+        scrollvars = {rarity: tkinter.IntVar() for rarity in Hearthstone.rarities}
+        self.view.add_scrollers(scrollvars)
+        key_press = self.KeyPress('1')
+        self.view.key_pressed(key_press)
+        self.assertEqual(scrollvars['common'].get(), 1)
+        self.assertEqual(self.view.rarity_scrollers['common'].text['foreground'], 'black')
+        backspace = self.KeyPress('\x08')
+        self.view.key_pressed(backspace)
+        self.assertEqual(scrollvars['common'].get(), 0)
+        self.assertEqual(self.view.rarity_scrollers['common'].text['foreground'], 'red')
+
+    def test_handles_escape(self):
+        scrollvars = {rarity: tkinter.IntVar() for rarity in Hearthstone.rarities}
+        self.view.add_scrollers(scrollvars)
+        key_press = self.KeyPress('5')
+
+        # set a lot of scrollers to 5
+        # Don't do all 8, so cursor wouldn't go to common next if not reset
+        for rarity in range(6):
+            self.view.key_pressed(key_press)
+
+        escape = self.KeyPress('\x1b')
+        self.view.key_pressed(escape)
+
+        # hit escape, should return to default pack
+        for rarity in Hearthstone.rarities:
+            self.assertEqual(scrollvars[rarity].get(), Hearthstone.default_pack[rarity])
+
+        # 'cursor' should be back at 0, so next press should affect common
+        self.view.key_pressed(key_press)
+        self.assertEqual(scrollvars['common'].get(), 5)
+
 
 class TestArenaMiniView(unittest.TestCase):
-
     pass
 
 
 class TestSeasonMiniView(unittest.TestCase):
-
     pass
 
 
@@ -393,7 +476,7 @@ class TestModel(unittest.TestCase):
     # ~~ Test init ~~
 
     def test_assigns_tkinter_variables(self):
-        md = Model.Model(self.config)
+        md = Model(self.config)
         string_variables = [md.current_subpage, md.notes,
                             md.card_set, md.view_card_set]
 
@@ -419,7 +502,17 @@ class TestModel(unittest.TestCase):
                 self.assertIsInstance(md.viewed_total_quantities[rarity], tkinter.IntVar, variable)
 
     def test_extracts_acronyms(self):
-        pass
+
+        acronyms = {'Whispers of the Old Gods': 'WotOG',
+                    'Mean Streets of Gadgetzan': 'MSoG', "Journey to Un'Goro": 'JtUG',
+                    'Knights of the Frozen Throne': 'KFT', 'Goblins vs Gnomes': 'GvG',
+                    'The Grand Tournament': 'TGT'}
+        for set_, acronym in acronyms.items():
+            # Just throwing everything in standard, we won't update this test to remain current
+            self.config.set('sets_standard', set_, acronym)
+        md = Model(self.config)
+        for set_, acronym in acronyms.items():
+            self.assertEqual(md.acronyms[set_], acronym)
 
     # ~~ Test find_image ~~
 
@@ -452,7 +545,7 @@ class TestModel(unittest.TestCase):
         self.teardown_files.append(new_2_path)
         self.teardown_dirs.append(desktop_folder)
 
-        model = Model.Model(self.config)
+        model = Model(self.config)
 
         # Pack will have already been popped, so will only have 2 left
         self.assertEqual(len(model.packs), 2)
@@ -489,7 +582,7 @@ class TestModel(unittest.TestCase):
         self.teardown_files.append(invalid_path)
         self.teardown_dirs.append(desktop_folder)
 
-        model = Model.Model(self.config)
+        model = Model(self.config)
 
         # Should not have any packs, as the valid one has been popped
         self.assertEqual(len(model.packs), 0)
@@ -519,7 +612,7 @@ class TestModel(unittest.TestCase):
         self.teardown_files.append(file_2_path)
         self.teardown_dirs.append(desktop_folder)
 
-        model = Model.Model(self.config)
+        model = Model(self.config)
 
         # Model auto-pulls file_1 into current_pack
         self.assertEqual(len(model.packs), 1)
@@ -548,7 +641,7 @@ class TestModel(unittest.TestCase):
         self.teardown_files.append(file_1_path)
         self.teardown_dirs.append(desktop_folder)
 
-        model = Model.Model(self.config)
+        model = Model(self.config)
 
         for rarity in Hearthstone.rarities:
             model.quantities[rarity].set(1)
@@ -581,7 +674,7 @@ class TestModel(unittest.TestCase):
     # Note, only the values of the model are tested, no image need be loaded
 
     def test_valid_pack(self):
-        model = Model.Model(self.config)
+        model = Model(self.config)
 
         for rarity in Hearthstone.rarities:
             model.quantities[rarity].set(Hearthstone.default_pack[rarity])
@@ -590,12 +683,12 @@ class TestModel(unittest.TestCase):
         self.assertTrue(model.is_valid_pack())
 
     def test_valid_pack_defaults(self):
-        model = Model.Model(self.config)
+        model = Model(self.config)
         model.card_set.set('Classic')
         self.assertTrue(model.is_valid_pack())
 
     def test_valid_pack_noteworthy(self):
-        model = Model.Model(self.config)
+        model = Model(self.config)
         model.quantities['common'].set(3)
         model.quantities['golden_epic'].set(1)
         model.card_set.set('Classic')
@@ -606,7 +699,7 @@ class TestModel(unittest.TestCase):
         self.assertTrue(model.is_valid_pack())
 
     def test_too_many_cards(self):
-        model = Model.Model(self.config)
+        model = Model(self.config)
 
         for rarity in Hearthstone.rarities:
             model.quantities[rarity].set(0)
@@ -618,7 +711,7 @@ class TestModel(unittest.TestCase):
         self.assertFalse(model.is_valid_pack())
 
     def test_too_few_cards(self):
-        model = Model.Model(self.config)
+        model = Model(self.config)
 
         for rarity in Hearthstone.rarities:
             model.quantities[rarity].set(0)
@@ -627,7 +720,7 @@ class TestModel(unittest.TestCase):
         self.assertFalse(model.is_valid_pack())
 
     def test_all_common_cards(self):
-        model = Model.Model(self.config)
+        model = Model(self.config)
 
         for rarity in Hearthstone.rarities:
             model.quantities[rarity].set(0)
@@ -637,13 +730,13 @@ class TestModel(unittest.TestCase):
         self.assertFalse(model.is_valid_pack())
 
     def test_no_set_selected(self):
-        model = Model.Model(self.config)
+        model = Model(self.config)
         # defaults is valid, sans the card_set
         self.assertFalse(model.is_valid_pack())
         pass
 
     def test_no_required_notes(self):
-        model = Model.Model(self.config)
+        model = Model(self.config)
         model.quantities['common'].set(3)
         model.quantities['golden_epic'].set(1)
         model.card_set.set('Classic')
@@ -697,7 +790,7 @@ class TestModel(unittest.TestCase):
         self.teardown_files.append(file_1_path)
         self.teardown_dirs.append(desktop_folder)
 
-        model = Model.Model(self.config)
+        model = Model(self.config)
 
         self.assertEqual(model.current_pack.image_name, file_1)
         model.not_pack()
@@ -737,7 +830,7 @@ class TestModel(unittest.TestCase):
         self.config.set('sets_standard', 'Knights of the Frozen Throne', 'KFT')
         self.config.set('sets_standard', 'Whispers of the Old Gods', 'WotOG')
 
-        model = Model.Model(self.config)
+        model = Model(self.config)
 
         # Have to disable the trace the vew_card_set variable, so we can override value
         model.view_card_set.trace_vdelete(*model.view_card_set.trace_vinfo()[0])
@@ -863,7 +956,7 @@ class TestGUI(unittest.TestCase):
         root = tkinter.Tk()
         gui = layout_test.GUI(root, self.config)
 
-        self.assertIsInstance(gui.model, Model.Model)
+        self.assertIsInstance(gui.model, Model)
         self.assertIsInstance(gui.main_view, FullViews.MainView)
         self.assertIsInstance(gui.pack_view, FullViews.PackView)
         self.assertIsInstance(gui.stats_view, FullViews.StatsView)

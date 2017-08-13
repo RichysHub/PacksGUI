@@ -21,6 +21,9 @@ class View(Frame):
         self.subpage_button_frame = None
         self.active_subpage = None
 
+        self.bind('<FocusIn>', self.on_focus)  # Bind on_focus method
+        self.bind('<Key>', self.key_pressed)  # Bind key_pressed method
+
     # TODO: from trying to envisage tests, this seems to do a LOT for one method
     # --> is this a problem?
     def add_subpage(self, constructor):
@@ -46,10 +49,19 @@ class View(Frame):
         frame = self.subpages[subpage_name]
         self.active_subpage.set(subpage_name)
         frame.tkraise()
+        frame.focus_set()
 
     def bind_subpage_variable(self, subpage_var):
         self.active_subpage = subpage_var
 
+    def key_pressed(self, event):
+        # Override this method to handle key presses
+        pass
+
+    def on_focus(self, *args):
+        # Called when focus is set to this widget
+        print('{}: I just got focus :3'.format(self.name))
+        pass
 
 # Displays pity timers
 # Should be on a per set basis, with dropdown
@@ -164,6 +176,10 @@ class PackView(View):
         photo = ImageTk.PhotoImage(sized_image)
         self.image_frame.config(image=photo)
         self.image_frame.image = photo
+
+    def on_focus(self, *args):
+        # Push focus to currently active subpage
+        self.subpages[self.active_subpage.get()].focus_set()
 
 
 # Main GUI view, mainly as a container so the subpage methods can be used for the separate views
