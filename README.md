@@ -22,7 +22,7 @@ Information that will require updating over time is stored within the [config fi
 
 Pack opening data is stored in a JSON format file, handled with *tinydb*.
 
-Tests are written with unittest, and can currently be run by simply executing [tests.py](tests/tests.py).
+Tests are written with *unittest*, and can currently be run by simply executing [tests.py](tests/tests.py).
 
 
 **Note:** As this personal project is still in development, code on the master branch may be urefined or unfinished.
