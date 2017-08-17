@@ -176,6 +176,14 @@ def date_from_filename(filename):
     datetime = '/'.join([*date_list, *time_list])
     return datetime
 
+# Option menu patch from Bryan Oakley
+# https://stackoverflow.com/questions/33831289/ttk-optionmenu-displaying-check-mark-on-all-menus
+# To fix issue: bugs.python.org/issue25684
+def optionmenu_patch(om, var):
+    menu = om['menu']
+    last = menu.index("end")
+    for i in range(0, last+1):
+        menu.entryconfig(i, variable=var)
 
 if __name__ == "__main__":
     # TODO: remove, was just for testing

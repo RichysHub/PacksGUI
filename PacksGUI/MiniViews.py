@@ -4,6 +4,7 @@ from tkinter.ttk import OptionMenu
 from Hearthstone import Hearthstone
 from IntScroller import IntScroller
 from FullViews import View
+from utils import optionmenu_patch
 
 
 class PackMiniView(View):
@@ -49,6 +50,8 @@ class PackMiniView(View):
 
     def add_set_selector(self, model_variable, standard, wild):
         set_selector = OptionMenu(self, model_variable, "Card Set", *standard, *wild)
+        # Fix for multi-menu bug
+        optionmenu_patch(set_selector, model_variable)
         set_selector['menu'].insert_separator(len(standard))
         set_selector.grid(row=2, column=1, columnspan=2, pady=20)
         self.set_selector = set_selector

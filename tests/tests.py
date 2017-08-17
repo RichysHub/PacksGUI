@@ -742,8 +742,7 @@ class TestModel(unittest.TestCase):
         # Have to disable the trace the vew_card_set variable, so we can override value
         model.view_card_set.trace_vdelete(*model.view_card_set.trace_vinfo()[0])
 
-        # Have to do some janky space-padding, tkinter issues
-        model.view_card_set.set(' Knights of the Frozen Throne ')
+        model.view_card_set.set('Knights of the Frozen Throne')
         model.extract_data()
 
         self.assertEqual(model.viewed_total_packs.get(), 2)
@@ -766,7 +765,7 @@ class TestModel(unittest.TestCase):
         self.assertEqual(model.viewed_total_quantities['golden_epic'].get(), 0)
         self.assertEqual(model.viewed_total_quantities['golden_legendary'].get(), 0)
 
-        model.view_card_set.set(' Classic ')
+        model.view_card_set.set('Classic')
         model.extract_data()
 
         self.assertEqual(model.viewed_total_packs.get(), 1)
@@ -789,7 +788,7 @@ class TestModel(unittest.TestCase):
         self.assertEqual(model.viewed_total_quantities['golden_epic'].get(), 0)
         self.assertEqual(model.viewed_total_quantities['golden_legendary'].get(), 0)
 
-        model.view_card_set.set(' All Sets ')
+        model.view_card_set.set('All Sets')
         model.extract_data()
 
         self.assertEqual(model.viewed_total_packs.get(), 3)
@@ -812,7 +811,7 @@ class TestModel(unittest.TestCase):
         self.assertEqual(model.viewed_total_quantities['golden_epic'].get(), 0)
         self.assertEqual(model.viewed_total_quantities['golden_legendary'].get(), 0)
 
-        model.view_card_set.set(' Whispers of the Old Gods ')
+        model.view_card_set.set('Whispers of the Old Gods')
         model.extract_data()
 
         self.assertEqual(model.viewed_total_packs.get(), 0)

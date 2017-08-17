@@ -4,6 +4,7 @@ from tkinter.ttk import Button, OptionMenu
 from PIL import Image, ImageTk
 
 from Hearthstone import Hearthstone
+from utils import optionmenu_patch
 
 
 class View(Frame):
@@ -102,10 +103,9 @@ class StatsView(View):
         self.columnconfigure(3, weight=1)
 
     def add_set_selector(self, model_variable, standard, wild):
-        # Adding in some space padding to avoid an issue with tkinter
-        # AS 2 OptionMenus would have some of the same items, highlight tick cross-updates
-        set_selector = OptionMenu(self, model_variable, " Card Set ", ' All Sets ',
-                                  *[' '+item+' ' for item in standard], *[' '+item+' ' for item in wild])
+        set_selector = OptionMenu(self, model_variable, "Card Set", 'All Sets', *standard, *wild)
+        # Using patch to fix bug with multiple menus
+        optionmenu_patch(set_selector, model_variable)
         set_selector['menu'].insert_separator(1)
         set_selector['menu'].insert_separator(len(standard)+2)
         set_selector.grid(row=0, column=0, columnspan=5, pady=20)

@@ -193,8 +193,6 @@ class Model:
         # -->view will then change, as variables are updated
 
         set_name = self.view_card_set.get()
-        # Janky, reverses the padding we had to do earlier
-        set_name = set_name[1:-1]
 
         if set_name == 'Card Set':
             return
