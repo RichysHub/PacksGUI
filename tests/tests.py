@@ -15,7 +15,7 @@ import MiniViews
 import Model
 import FullViews
 import layout_test
-from Hearthstone import Hearthstone
+from Hearthstone import Hearthstone, Reward
 
 
 # ~~ IMPORTANT ~~
@@ -867,6 +867,36 @@ class TestGUI(unittest.TestCase):
         self.assertIsInstance(gui.pack_view, FullViews.PackView)
         self.assertIsInstance(gui.stats_view, FullViews.StatsView)
         self.assertIsInstance(gui.pity_view, FullViews.PityView)
+
+
+class TestHearthstone(unittest.TestCase):
+
+    def test_all_key_names_listed(self):
+        self.assertEqual(len(Hearthstone.arena_keys), 13)
+
+    def test_num_arena_rewards_all_listed(self):
+        self.assertEqual(len(Hearthstone.num_arena_rewards), 13)
+
+    def test_correct_win_number_in_rewards(self):
+        for wins_ in range(0, 13):
+            with self.subTest(wins_=wins_):
+                self.assertEqual(Hearthstone.rewards[wins_].wins, wins_)
+
+    def test_correct_number_rewards(self):
+        for wins in range(0, 13):
+            with self.subTest(wins=wins):
+                self.assertEqual(Hearthstone.rewards[wins].number, Hearthstone.num_arena_rewards[wins])
+
+    def test_rewards_of_class_reward(self):
+        for wins in range(0, 13):
+            with self.subTest(wins=wins):
+                self.assertIsInstance(Hearthstone.rewards[wins], Reward)
+
+    def test_rewards_sum_to_boxes(self):
+        for wins in range(0, 13):
+            with self.subTest(wins=wins):
+                self.assertEqual(len(Hearthstone.rewards[wins].guaranteed), Hearthstone.num_arena_rewards[wins])
+
 
 
 if __name__ == '__main__':
