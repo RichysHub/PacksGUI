@@ -63,7 +63,8 @@ class GUI:
         pack_subpage.note_box.config(textvariable=self.model.notes)
 
         # ~~ Arena subpage ~~
-        self.pack_view.add_subpage(ArenaMiniView)
+        arena_subpage = self.pack_view.add_subpage(ArenaMiniView)
+        sub_pack= arena_subpage.add_subpage(SeasonMiniView, make_button=False)
 
         # ~~ End of Season subpage ~~
         season_subpage = self.pack_view.add_subpage(SeasonMiniView)

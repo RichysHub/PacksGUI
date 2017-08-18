@@ -1,4 +1,4 @@
-from tkinter import IntVar, Entry, CENTER, RIGHT, LEFT, Frame, Tk, Label
+from tkinter import IntVar, Entry, CENTER, RIGHT, LEFT, Frame, Tk, Label, LabelFrame
 from tkinter.ttk import Button
 
 
@@ -28,9 +28,11 @@ class IntScroller(Frame):
             left_frame = Frame(self)
             self.label = Label(left_frame, text=label_text, justify=RIGHT)
             self.label.pack()
-            left_frame.pack(side=LEFT)
+            left_frame.grid(row=0, column=0)
+            scroller_column = 1
         else:
             self.label = None
+            scroller_column = 0
 
         self.up_button = Button(right_frame, text='\u25b2', command=self.inc, **kwargs)
         self.text = Entry(right_frame, textvariable=self.var, justify=CENTER, state='readonly', **kwargs)
@@ -39,7 +41,14 @@ class IntScroller(Frame):
         self.up_button.grid(row=0)
         self.text.grid(row=1)
         self.down_button.grid(row=2)
-        right_frame.pack(side=LEFT)
+        right_frame.grid(row=0, column=scroller_column)
+
+        # Using a third column, same width as text column, to help keep scroller central in widget
+        self.columnconfigure(0, weight=1, uniform='foo')
+        if label_text:
+            self.columnconfigure(1, weight=1)
+            self.columnconfigure(2, weight=1, uniform='foo')
+
 
 
         # Copied from spindown, hoping to implement similar options for compatibility
@@ -85,7 +94,7 @@ if __name__ == '__main__':
     frame.pack(padx=100, pady=100)
 
     textless = IntScroller(frame, from_=0, to=5, value=10, width=2)
-    text = IntScroller(frame, from_=0, to=5, value=10, width=2, label='Epic')
+    text = IntScroller(frame, from_=0, to=5, value=10, width=2, label='Epicdsfhgkusdfjygdsfjgdfhjgsdfghgfsdfug')
     negative_increment = IntScroller(frame, from_=0, to=25, value=25, width=3, increment=-1, label='Rank')
     multiple_increment = IntScroller(frame, from_=0, to=30, value=10, width=2, increment=2)
 

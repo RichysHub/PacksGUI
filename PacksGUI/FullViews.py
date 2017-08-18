@@ -24,7 +24,8 @@ class View(Frame):
 
     # TODO: from trying to envisage tests, this seems to do a LOT for one method
     # --> is this a problem?
-    def add_subpage(self, constructor):
+    def add_subpage(self, constructor, make_button=True):
+        # can pass buttons=False, to not bother making them
         if not self.active_subpage:
             # subpage variable is needed, if none, supply one
             self.active_subpage = StringVar()
@@ -33,12 +34,13 @@ class View(Frame):
         self.subpages[subpage.name] = subpage
         subpage.grid(row=0, column=0, sticky=NSEW)
         self.subpage_frame.columnconfigure(0, weight=1)
-        # adds button to nav bar that will raise that view
-        button = Button(self.subpage_button_frame, text=subpage.name, command=lambda: self.raise_view(subpage.name))
-        btn_idx = len(self.subpage_buttons)
-        button.grid(row=0, column=btn_idx, padx=20, sticky=NSEW)
-        self.subpage_buttons.append(button)
-        self.columnconfigure(btn_idx, weight=1)
+        if make_button:
+            # adds button to nav bar that will raise that view
+            button = Button(self.subpage_button_frame, text=subpage.name, command=lambda: self.raise_view(subpage.name))
+            btn_idx = len(self.subpage_buttons)
+            button.grid(row=0, column=btn_idx, padx=20, sticky=NSEW)
+            self.subpage_buttons.append(button)
+            self.columnconfigure(btn_idx, weight=1)
 
         self.active_subpage.set(subpage.name)
         return subpage

@@ -1,5 +1,5 @@
-from tkinter import Label, Entry, CENTER, E
-from tkinter.ttk import OptionMenu
+from tkinter import Label, Entry, CENTER, E, Frame, NSEW
+from tkinter.ttk import OptionMenu, Button
 
 from Hearthstone import Hearthstone
 from IntScroller import IntScroller
@@ -28,7 +28,7 @@ class PackMiniView(View):
         self.columnconfigure(2, weight=1)
         self.columnconfigure(3, weight=1)
         # Adding a 5th column, for push scrollers left, little janky but looks acceptable
-        self.columnconfigure(4, weight=1)
+        # self.columnconfigure(4, weight=1)
 
     def add_scrollers(self, scrollvars):
         rarity_names = {'common': 'Common', 'rare': 'Rare', 'epic': 'Epic', 'legendary': 'Legendary',
@@ -38,15 +38,15 @@ class PackMiniView(View):
             self.rarity_scrollers.update({rarity: IntScroller(self, textvariable=scrollvars[rarity],
                                                               label=rarity_names[rarity], width=2)})
 
-        self.rarity_scrollers['common'].grid(row=0, column=0, pady=10, sticky=E)
-        self.rarity_scrollers['rare'].grid(row=0, column=1, pady=10, sticky=E)
-        self.rarity_scrollers['epic'].grid(row=0, column=2, pady=10, sticky=E)
-        self.rarity_scrollers['legendary'].grid(row=0, column=3, pady=10, sticky=E)
+        self.rarity_scrollers['common'].grid(row=0, column=0, pady=10)
+        self.rarity_scrollers['rare'].grid(row=0, column=1, pady=10)
+        self.rarity_scrollers['epic'].grid(row=0, column=2, pady=10)
+        self.rarity_scrollers['legendary'].grid(row=0, column=3, pady=10)
 
-        self.rarity_scrollers['golden_common'].grid(row=1, column=0, pady=10, sticky=E)
-        self.rarity_scrollers['golden_rare'].grid(row=1, column=1, pady=10, sticky=E)
-        self.rarity_scrollers['golden_epic'].grid(row=1, column=2, pady=10, sticky=E)
-        self.rarity_scrollers['golden_legendary'].grid(row=1, column=3, pady=10, sticky=E)
+        self.rarity_scrollers['golden_common'].grid(row=1, column=0, pady=10)
+        self.rarity_scrollers['golden_rare'].grid(row=1, column=1, pady=10)
+        self.rarity_scrollers['golden_epic'].grid(row=1, column=2, pady=10)
+        self.rarity_scrollers['golden_legendary'].grid(row=1, column=3, pady=10)
 
     def add_set_selector(self, model_variable, standard, wild):
         set_selector = OptionMenu(self, model_variable, "Card Set", *standard, *wild)
@@ -67,6 +67,40 @@ class ArenaMiniView(View):
 
         self.rarity_values = {}
         self.rarity_scrollers = {}
+
+        self.subpage_frame = Frame(self)
+        self.subpage_frame.grid(row=0, column=0, sticky=NSEW)
+        self.columnconfigure(0, weight=1)
+        self.rowconfigure(0, weight=1)
+
+
+        # Arena MiniView has 2 stages, corresponding to the 2 images each arena run gives
+        # Each stage will likely be a further subpage, but without control buttons
+        # First image:
+        # End screen, #wins, #loses, class
+        # Win spinbox / IntScroller, 0-12
+        # Loses spinbox / IntScroller, 0-3 - verification, no 12-3 allow eg 0-2, for retires
+
+
+        # Second image:
+        # Rewards, predetermined number of boxes, some rewards predetermined
+        # Gold: spinbox / IntScroller between known min-max
+        # --> How do we handle the 12 wins double guaranteed gold? Will just be clear from default value?
+        # Dust: spinbox / IntScroller between known min-max
+        # Card: dropdown box between rarities
+        # Pack: Selector for set (defaults to most recent expansion, last in standard)
+
+        # Each of these box content selectors will slot into the second image, perhaps separate View objects
+        # Need selector for type, for the Random rewards (dropdown contents known)
+        # Could have all the possible box content views stacked, with dropdown raising one of them
+
+
+        # Do we want to lockout the Packs, EoS, Other mini views until we have both images stored?
+        # How would we even do this?
+        # --> need a ref to PacksView, which controls those buttons
+        # --> something like master.disable_buttons(), master.enable_buttons()
+        # Also useful for the EoS minipage, which is many images
+
 
 
 class SeasonMiniView(View):
