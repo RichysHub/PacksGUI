@@ -1,5 +1,5 @@
 from tkinter import Label, Entry, CENTER, E, Frame, NSEW
-from tkinter.ttk import OptionMenu, Button
+from tkinter.ttk import OptionMenu
 
 from Hearthstone import Hearthstone
 from IntScroller import IntScroller

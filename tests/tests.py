@@ -897,7 +897,7 @@ class TestHearthstone(unittest.TestCase):
             with self.subTest(wins=wins):
                 self.assertEqual(len(Hearthstone.rewards[wins].guaranteed), Hearthstone.num_arena_rewards[wins])
 
-    def test_correct_number_of_classed(self):
+    def test_correct_number_of_classes(self):
         self.assertEqual(len(Hearthstone.classes), 9)
 
 

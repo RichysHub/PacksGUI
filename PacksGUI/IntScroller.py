@@ -1,4 +1,4 @@
-from tkinter import IntVar, Entry, CENTER, RIGHT, LEFT, Frame, Tk, Label, LabelFrame
+from tkinter import IntVar, Entry, CENTER, RIGHT, Frame, Tk, Label
 from tkinter.ttk import Button
 
 
@@ -94,7 +94,7 @@ if __name__ == '__main__':
     frame.pack(padx=100, pady=100)
 
     textless = IntScroller(frame, from_=0, to=5, value=10, width=2)
-    text = IntScroller(frame, from_=0, to=5, value=10, width=2, label='Epicdsfhgkusdfjygdsfjgdfhjgsdfghgfsdfug')
+    text = IntScroller(frame, from_=0, to=5, value=10, width=2, label='Epic')
     negative_increment = IntScroller(frame, from_=0, to=25, value=25, width=3, increment=-1, label='Rank')
     multiple_increment = IntScroller(frame, from_=0, to=30, value=10, width=2, increment=2)
 
