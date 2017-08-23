@@ -105,6 +105,33 @@ class GUI:
 
         # Todo: is the logic for this being in the controller still valid, or should it move?
 
+        # We lucked out here. We can use this submit hook to perform all the arena related things we need.
+        # On arena submit, we can extract the # of wins from the model's variable, and set up the next arena page
+        # Can also lock all our top level buttons, so that the user can't switch off between images
+
+        active_page = self.pack_view.active_subpage.get()
+
+        # Todo: Could do with something cleaner than an if else ladder
+        # Todo: using names here is a little off, consider changing this
+        if active_page == 'Packs':  # Actual pack submission page
+            pass
+        elif active_page == 'Arena Rewards':  # Arena rewards page
+            page = self.pack_view.subpages['Arena Rewards'].active_subpage.get()
+            if page == 'Arena1':
+                pass
+
+                self.main_view.disable_buttons()
+                self.pack_view.disable_buttons()
+            elif page == 'Arena2':
+                pass
+
+        elif active_page == 'Season End':  # End of season rewards page
+            pass
+        elif active_page == 'Other':  # Other image page
+            pass
+        else:
+            pass
+
         # evoked by the submit button.
         # The controller has this method such that if the model were to fail, view can be changed
         valid = self.model.is_valid_pack()

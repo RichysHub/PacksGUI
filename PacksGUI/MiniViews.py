@@ -1,4 +1,4 @@
-from tkinter import Label, Entry, CENTER, E
+from tkinter import Label, Entry, CENTER, E, Frame
 from tkinter.ttk import OptionMenu
 
 from Hearthstone import Hearthstone
@@ -65,8 +65,68 @@ class ArenaMiniView(View):
         self.master = master
         self.name = 'Arena Rewards'
 
-        self.rarity_values = {}
-        self.rarity_scrollers = {}
+        self.page_one = self.add_subpage(ArenaPageOne)
+        self.page_two = self.add_subpage(ArenaPageTwo)
+
+
+class ArenaPageOne(View):
+    def __init__(self, master):
+        super().__init__(master)
+        self.master = master
+        self.name = 'Arena1'
+
+    def add_win_selector(self, model_variable):
+        pass
+
+    def add_loss_selector(self, model_variable):
+        pass
+
+    def add_class_selector(self, model_variable):
+        pass
+
+class ArenaPageTwo(View):
+    def __init__(self, master):
+        super().__init__(master)
+        self.master = master
+        self.name = 'Arena2'
+
+    def set_number_rewards(self, number):
+        # Do something with the interface, depending on the number of wins
+        # Could remove the extra boxes, could just disable them
+        pass
+
+
+class RewardBox(View):
+    def __init__(self, master):
+        super().__init__(master)
+        self.master = master
+        self.name = 'Reward Box'
+
+        self.reward_dropdown = None
+
+        self.reward_entry_frame = Frame(self)
+        self.reward_entry_frame.grid(row=1, column=0)
+
+    def add_reward_dropdown(self):
+
+        self.reward_dropdown.grid(row=0, column=0)
+        pass
+
+
+class CardRewardEntry(View):
+    pass
+
+
+class DustRewardEntry(View):
+    pass
+
+
+class GoldRewardEntry(View):
+    pass
+
+
+class PackRewardEntry(View):
+    pass
 
 
 class SeasonMiniView(View):

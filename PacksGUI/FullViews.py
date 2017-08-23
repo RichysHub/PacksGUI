@@ -1,4 +1,4 @@
-from tkinter import StringVar, NSEW, Label, E, W, Frame
+from tkinter import StringVar, NSEW, Label, E, W, Frame, DISABLED
 from tkinter.ttk import Button, OptionMenu
 
 from PIL import Image, ImageTk
@@ -50,6 +50,14 @@ class View(Frame):
 
     def bind_subpage_variable(self, subpage_var):
         self.active_subpage = subpage_var
+
+    def disable_buttons(self):
+        for button in self.subpage_buttons:
+            button.config(state=DISABLED)
+
+    def enable_buttons(self):
+        for button in self.subpage_buttons:
+            button.config(state=DISABLED)
 
 
 # Displays pity timers
