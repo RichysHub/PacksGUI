@@ -105,3 +105,5 @@ class Hearthstone:
         12: Reward(12, num_arena_rewards[12], [Pack(), Gold(215, 225), Gold(25, 35), Random(), Random()],
                   [Gold(65, 185), Card('epic', 'golden_legendary'), Pack()])
     }
+
+    classes = ['Druid', 'Hunter', 'Mage', 'Paladin', 'Priest', 'Rogue', 'Shaman', 'Warlock', 'Warrior']
