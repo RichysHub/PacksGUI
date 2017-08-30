@@ -1,4 +1,4 @@
-from tkinter import StringVar, NSEW, Label, E, W, Frame, DISABLED
+from tkinter import StringVar, NSEW, Label, E, W, Frame, DISABLED, NORMAL
 from tkinter.ttk import Button, OptionMenu
 
 from PIL import Image, ImageTk
@@ -34,6 +34,7 @@ class View(Frame):
         self.subpages[subpage.name] = subpage
         subpage.grid(row=0, column=0, sticky=NSEW)
         self.subpage_frame.columnconfigure(0, weight=1)
+        self.subpage_frame.rowconfigure(0, weight=1)
         if make_button:
             # adds button to nav bar that will raise that view
             button = Button(self.subpage_button_frame, text=subpage.name, command=lambda: self.raise_view(subpage.name))
@@ -59,7 +60,7 @@ class View(Frame):
 
     def enable_buttons(self):
         for button in self.subpage_buttons:
-            button.config(state=DISABLED)
+            button.config(state=NORMAL)
 
 
 # Displays pity timers

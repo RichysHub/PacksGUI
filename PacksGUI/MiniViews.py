@@ -1,4 +1,4 @@
-from tkinter import Label, Entry, CENTER, E, Frame, NSEW
+from tkinter import Label, Entry, CENTER, E, Frame, NSEW, LabelFrame, Tk, StringVar, RIDGE
 from tkinter.ttk import OptionMenu
 
 from Hearthstone import Hearthstone
@@ -67,9 +67,13 @@ class ArenaMiniView(View):
 
         self.subpage_frame = Frame(self)
         self.subpage_frame.grid(row=0, column=0, sticky=NSEW)
+        self.columnconfigure(0, weight=1)
+        self.rowconfigure(0, weight=1)
 
         self.page_one = self.add_subpage(ArenaPageOne, make_button=False)
         self.page_two = self.add_subpage(ArenaPageTwo, make_button=False)
+
+        self.raise_view(self.page_one.name)
 
 
 class ArenaPageOne(View):
@@ -87,15 +91,46 @@ class ArenaPageOne(View):
     def add_class_selector(self, model_variable):
         pass
 
+
 class ArenaPageTwo(View):
     def __init__(self, master):
         super().__init__(master)
         self.master = master
         self.name = 'Arena2'
 
-    def set_number_rewards(self, number):
+
+        # self.reward_boxes = [RewardBox(self) for i in range(5)]
+        # pack reward is reward_boxes[0], kept at start
+        box1 = RewardBox(self)
+        box1.grid(row=0, column=0, sticky=NSEW)
+        box2 = RewardBox(self)
+        box2.grid(row=0, column=1, sticky=NSEW)
+        box2.add_reward_dropdown(StringVar(), '2', ['1', '2', '3', '4', '5'])
+        box3 = RewardBox(self)
+        box3.grid(row=0, column=2, sticky=NSEW)
+        box4 = RewardBox(self)
+        box4.grid(row=1, column=0, sticky=NSEW)
+
+        filler_box = RewardBox(self)
+        filler_box.grid(row=1, column=1, sticky=NSEW)
+
+        box5 = RewardBox(self)
+        box5.grid(row=1, column=2, sticky=NSEW)
+        box5.add_reward_dropdown(StringVar(), '5', ['1', '2', '3', '4', '5'])
+
+        for i in range(0, 3):
+            self.columnconfigure(i, weight=1)
+        for i in range(0, 2):
+            self.rowconfigure(i, weight=1)
+
+
+    def set_number_wins(self, wins):
         # Do something with the interface, depending on the number of wins
         # Could remove the extra boxes, could just disable them
+
+        number_boxes = Hearthstone.num_arena_rewards[wins]
+
+
         pass
 
 
@@ -106,14 +141,23 @@ class RewardBox(View):
         self.name = 'Reward Box'
 
         self.reward_dropdown = None
+        edge_color = '#2d2d89'
+        self.config(highlightbackground=edge_color, highlightthickness=1)
 
         self.reward_entry_frame = Frame(self)
         self.reward_entry_frame.grid(row=1, column=0)
+        label = Label(self.reward_entry_frame, text='Hello')
+        label.pack()
 
-    def add_reward_dropdown(self):
+        self.columnconfigure(0, weight=1)
+        self.rowconfigure(0, weight=1)
+        self.rowconfigure(1, weight=1)
 
+    def add_reward_dropdown(self, model_variable, default, options):
+        self.reward_dropdown = OptionMenu(self, model_variable, default, *options)
+        # Using patch to fix bug with multiple menus
+        optionmenu_patch(self.reward_dropdown, model_variable)
         self.reward_dropdown.grid(row=0, column=0)
-        pass
 
 
 class CardRewardEntry(View):
@@ -158,7 +202,6 @@ class PackRewardEntry(View):
         # --> need a ref to PacksView, which controls those buttons
         # --> something like master.disable_buttons(), master.enable_buttons()
         # Also useful for the EoS minipage, which is many images
-
 
 
 class SeasonMiniView(View):
