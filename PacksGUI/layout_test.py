@@ -11,6 +11,7 @@ from PIL import Image
 from MiniViews import PackMiniView, ArenaMiniView, SeasonMiniView, OtherMiniView
 from Model import Model
 from FullViews import PityView, StatsView, PackView, MainView
+import Hearthstone
 
 
 # Controller passes a config, from which the model extracts a lot of info
@@ -64,7 +65,6 @@ class GUI:
 
         # ~~ Arena subpage ~~
         arena_subpage = self.pack_view.add_subpage(ArenaMiniView)
-        sub_pack= arena_subpage.add_subpage(SeasonMiniView, make_button=False)
 
         # ~~ End of Season subpage ~~
         season_subpage = self.pack_view.add_subpage(SeasonMiniView)
@@ -99,22 +99,77 @@ class GUI:
 
     def submit(self):
 
-        # Todo: this needs to be revamped
-        # --> Validation is only needed in this form for a pack submission
         # --> Can use model variable to determine which subpage we are on
         # --> Can process subpage validation separately
 
         # Todo: is the logic for this being in the controller still valid, or should it move?
-
         # evoked by the submit button.
         # The controller has this method such that if the model were to fail, view can be changed
-        valid = self.model.is_valid_pack()
-        if valid:
-            self.model.submit()
-            self.update_image()
+
+        # We lucked out here. We can use this submit hook to perform all the arena related things we need.
+        # On arena submit, we can extract the # of wins from the model's variable, and set up the next arena page
+        # Can also lock all our top level buttons, so that the user can't switch off between images
+
+        active_page = self.pack_view.active_subpage.get()
+
+        # Todo: Could do with something cleaner than an if else ladder
+        # Todo: using names here is a little off, consider changing this
+        if active_page == 'Packs':  # Actual pack submission page
+            valid = self.model.is_valid_pack()
+            if valid:
+                self.model.submit()
+                self.update_image()
+            else:
+                print("Invalid pack")
+            pass
+        elif active_page == 'Arena Rewards':  # Arena rewards page
+            page = self.pack_view.subpages['Arena Rewards'].active_subpage.get()
+            print(page)
+            if page == 'Arena1':
+                # This will end up a little WET when we add the Season end set
+                # Both want the buttons to stay disabled for a set # of images, and enable at end
+                # Both will want the first in set to be raised at the end too
+                # Could be done cleaner than case by case
+                self.main_view.disable_buttons()
+                self.pack_view.disable_buttons()
+                # logic to prepare second arena page will go here, extracting win# from the first page
+
+                wins = 3
+
+                # self.pack_view.subpages['Arena Rewards'].set_number_wins(wins)
+
+                reward_obj = Hearthstone.Hearthstone.rewards[wins]
+
+                for reward in reward_obj.guaranteed:
+                    if not isinstance(reward, Hearthstone.Random):  # Not a pool reward
+                        # Todo: Not sure how we're handling the boxes
+                        # Could be using grid_remove method on the reward boxes
+                        # Adjust remaining boxes based on the pools
+                        # so that all the subpages are there but hidden?
+                        # We know we always have a pack box, so this one makes no sence to have the others hiding in
+                        # self.pack_view.subpages['Arena Rewards'].add_box(reward)
+                        pass
+                    else:
+                        # Sending the whole pool, let the view work it out?
+                        # self.pack_view.subpages['Arena Rewards'].add_box(reward_obj.pool)
+                        pass
+
+                self.pack_view.subpages['Arena Rewards'].raise_view('Arena2')
+            elif page == 'Arena2':
+                self.main_view.enable_buttons()
+                self.pack_view.enable_buttons()
+
+                # Some method to reset the boxes, either here or perhaps when bringing up the page 2
+                # self.pack_view.subpages['Arena Rewards'].clear_boxes()
+
+                self.pack_view.subpages['Arena Rewards'].raise_view('Arena1')
+
+        elif active_page == 'Season End':  # End of season rewards page
+            pass
+        elif active_page == 'Other':  # Other image page
+            pass
         else:
-            print("Invalid pack")
-        pass
+            pass
 
 
 if __name__ == '__main__':

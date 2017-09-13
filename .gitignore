@@ -10,6 +10,10 @@ PacksGUI_conf.ini
 # Working Images
 *.png
 
+# Coverage
+.coverage
+htmlcov/
+
 # Junk
 .idea/
 graphic_scroller.py

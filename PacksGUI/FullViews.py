@@ -1,4 +1,4 @@
-from tkinter import StringVar, NSEW, Label, E, W, Frame
+from tkinter import StringVar, NSEW, Label, E, W, Frame, DISABLED, NORMAL
 from tkinter.ttk import Button, OptionMenu
 
 from PIL import Image, ImageTk
@@ -37,6 +37,7 @@ class View(Frame):
         self.subpages[subpage.name] = subpage
         subpage.grid(row=0, column=0, sticky=NSEW)
         self.subpage_frame.columnconfigure(0, weight=1)
+        self.subpage_frame.rowconfigure(0, weight=1)
         if make_button:
             # adds button to nav bar that will raise that view
             button = Button(self.subpage_button_frame, text=subpage.name, command=lambda: self.raise_view(subpage.name))
@@ -65,6 +66,14 @@ class View(Frame):
         # Called when focus is set to this widget
         print('{}: I just got focus :3'.format(self.name))
         pass
+
+    def disable_buttons(self):
+        for button in self.subpage_buttons:
+            button.config(state=DISABLED)
+
+    def enable_buttons(self):
+        for button in self.subpage_buttons:
+            button.config(state=NORMAL)
 
 # Displays pity timers
 # Should be on a per set basis, with dropdown
