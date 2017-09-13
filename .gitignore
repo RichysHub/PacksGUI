@@ -14,3 +14,7 @@ PacksGUI_conf.ini
 .idea/
 graphic_scroller.py
 Rewards_pre_Aug11.odt
+
+#Coverage
+.coverage
+htmlcov/
