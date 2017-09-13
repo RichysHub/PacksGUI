@@ -17,6 +17,7 @@ class PackMiniView(View):
         self.rarity_values = {}
         self.rarity_scrollers = {}
         self.set_selector = None
+        self.virtual_cursor = 0  # Virtual cursor, for entering values into scrollers with keyboard
 
         self.notes_label = Label(self, text="Notes:")
         self.notes_label.grid(row=3, column=0, columnspan=4)
@@ -48,6 +49,9 @@ class PackMiniView(View):
         self.rarity_scrollers['golden_epic'].grid(row=1, column=2, pady=10)
         self.rarity_scrollers['golden_legendary'].grid(row=1, column=3, pady=10)
 
+        # activate the first scroller
+        self.rarity_scrollers[Hearthstone.rarities[self.virtual_cursor]].activate()
+
     def add_set_selector(self, model_variable, standard, wild):
         set_selector = OptionMenu(self, model_variable, "Card Set", *standard, *wild)
         # Fix for multi-menu bug
@@ -55,6 +59,35 @@ class PackMiniView(View):
         set_selector['menu'].insert_separator(len(standard))
         set_selector.grid(row=2, column=1, columnspan=2, pady=20)
         self.set_selector = set_selector
+
+    def key_pressed(self, event):
+
+        valid_digits = ('0', '1', '2', '3', '4', '5')
+
+        enter = '\r'
+        backspace = '\x08'
+        escape = '\x1b'
+
+        key = event.char
+
+        if key in valid_digits:  # Valid values get passed to current intscroller
+            current_scroller = self.rarity_scrollers[Hearthstone.rarities[self.virtual_cursor]]
+            current_scroller.set(int(key))
+            current_scroller.deactivate()
+            self.virtual_cursor = (self.virtual_cursor + 1) % len(Hearthstone.rarities)
+            self.rarity_scrollers[Hearthstone.rarities[self.virtual_cursor]].activate()
+            self.rarity_scrollers[Hearthstone.rarities[self.virtual_cursor]].text.focus_set()
+        elif key is escape:  # Esc returns to default pack
+            self.rarity_scrollers[Hearthstone.rarities[self.virtual_cursor]].deactivate()
+            for rarity in Hearthstone.rarities:
+                self.rarity_scrollers[rarity].set(Hearthstone.default_pack[rarity])
+            self.virtual_cursor = 0
+            self.rarity_scrollers[Hearthstone.rarities[self.virtual_cursor]].activate()
+        elif key is backspace:  # Backspace moves back, and removes value
+            self.rarity_scrollers[Hearthstone.rarities[self.virtual_cursor]].deactivate()
+            self.virtual_cursor = (self.virtual_cursor - 1) % len(Hearthstone.rarities)
+            self.rarity_scrollers[Hearthstone.rarities[self.virtual_cursor]].set(0)
+            self.rarity_scrollers[Hearthstone.rarities[self.virtual_cursor]].activate()
 
 
 class ArenaMiniView(View):

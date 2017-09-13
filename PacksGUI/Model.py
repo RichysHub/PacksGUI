@@ -73,8 +73,6 @@ class Model:
         self.find_images()
         self.next_pack()
 
-        pass
-
     def find_images(self):
         """Finds all the screenshots on the desktop that might be packs, and stores them"""
         desktop_path = self.config['filepaths']['desktop']
