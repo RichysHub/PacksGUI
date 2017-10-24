@@ -24,12 +24,7 @@ class PackMiniView(View):
         self.note_box = Entry(self, justify=CENTER, width=60)
         self.note_box.grid(row=4, column=0, columnspan=4)
 
-        self.columnconfigure(0, weight=1)
-        self.columnconfigure(1, weight=1)
-        self.columnconfigure(2, weight=1)
-        self.columnconfigure(3, weight=1)
-        # Adding a 5th column, for push scrollers left, little janky but looks acceptable
-        # self.columnconfigure(4, weight=1)
+        self.size_columns(4)
 
     def add_scrollers(self, scrollvars):
         rarity_names = {'common': 'Common', 'rare': 'Rare', 'epic': 'Epic', 'legendary': 'Legendary',
@@ -100,13 +95,15 @@ class ArenaMiniView(View):
 
         self.subpage_frame = Frame(self)
         self.subpage_frame.grid(row=0, column=0, sticky=NSEW)
-        self.columnconfigure(0, weight=1)
-        self.rowconfigure(0, weight=1)
+        self.size_grid(1, 1)
 
         self.page_one = self.add_subpage(ArenaPageOne, make_button=False)
         self.page_two = self.add_subpage(ArenaPageTwo, make_button=False)
 
         self.raise_view(self.page_one.name)
+
+    def on_focus(self, *args):
+        self.subpages[self.active_subpage.get()].focus_set()
 
 
 class ArenaPageOne(View):
@@ -151,10 +148,7 @@ class ArenaPageTwo(View):
         box5.grid(row=1, column=2, sticky=NSEW)
         box5.add_reward_dropdown(StringVar(), '5', ['1', '2', '3', '4', '5'])
 
-        for i in range(0, 3):
-            self.columnconfigure(i, weight=1)
-        for i in range(0, 2):
-            self.rowconfigure(i, weight=1)
+        self.size_grid(2, 3)
 
 
     def set_number_wins(self, wins):
@@ -182,9 +176,7 @@ class RewardBox(View):
         label = Label(self.reward_entry_frame, text='Hello')
         label.pack()
 
-        self.columnconfigure(0, weight=1)
-        self.rowconfigure(0, weight=1)
-        self.rowconfigure(1, weight=1)
+        self.size_grid(2, 1)
 
     def add_reward_dropdown(self, model_variable, default, options):
         self.reward_dropdown = OptionMenu(self, model_variable, default, *options)
@@ -261,10 +253,7 @@ class SeasonMiniView(View):
         self.max_rank_Label.grid(row=0, column=0, sticky=E)
         self.end_rank_Label.grid(row=1, column=0, sticky=E)
 
-        self.columnconfigure(0, weight=1)
-        self.columnconfigure(1, weight=1)
-        self.rowconfigure(0, weight=1)
-        self.rowconfigure(1, weight=1)
+        self.size_grid(2,2)
 
 
 class OtherMiniView(View):
@@ -273,8 +262,7 @@ class OtherMiniView(View):
         self.master = master
         self.name = 'Other'
         self.folder_selection = None
-        self.rowconfigure(0, weight=1)
-        self.columnconfigure(0, weight=1)
+        self.size_grid(1, 1)
 
     # TODO: set selector is a little bit WET, may want a very minor refactor
     def add_selector(self, variable, *options):

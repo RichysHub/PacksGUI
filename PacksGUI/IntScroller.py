@@ -19,7 +19,6 @@ class IntScroller(Frame):
         # Clamp value to range
         value = min(self.max, max(value, self.min))
 
-        # TODO: this feels a little funky, having the IntScroller set the value in the model?
         self.set(value)
 
         right_frame = Frame(self)

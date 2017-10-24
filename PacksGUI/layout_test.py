@@ -72,7 +72,6 @@ class GUI:
         other_subpage = self.pack_view.add_subpage(OtherMiniView)
         # Todo: work out where folders are read from config and passed here
         # other_subpage.add_selector()
-
         self.pack_view.raise_view(pack_subpage.name)
 
     def configure_stats_view(self):

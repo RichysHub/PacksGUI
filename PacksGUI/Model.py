@@ -9,9 +9,6 @@ from CardPack import CardPack
 from Hearthstone import Hearthstone
 
 
-# TODO: opening of TinyDB is done manually in the 3 places it occurs
-# Investigate if this can be made DRY
-
 # TODO: Model is currently a big blob, could really be split up a little
 # designed to hold the back-bone logic of the whole shebang
 class Model:
@@ -60,12 +57,9 @@ class Model:
         self.view_card_set = StringVar()  # card set, as deemed by stats view
         self.viewed_total_packs = IntVar()  # packs for stats view card set
 
-        for rarity in Hearthstone.rarities:
-            # rarities are stored in IntVars so view can auto-update
-            self.quantities.update({rarity: IntVar()})
-            # viewed quantities are linked to being the # of that rarity in DB, for view_card_set
-            self.viewed_total_quantities.update({rarity: IntVar()})
-            self.viewed_mean_quantities.update({rarity: StringVar()})
+        self.quantities = {rarity: IntVar() for rarity in Hearthstone.rarities}
+        self.viewed_total_quantities = {rarity: IntVar() for rarity in Hearthstone.rarities}
+        self.viewed_mean_quantities = {rarity: StringVar() for rarity in Hearthstone.rarities}
 
         # Any time you change which card set you're viewing, reloads data
         self.view_card_set.trace_variable('w', self.extract_data)

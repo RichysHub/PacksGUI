@@ -25,6 +25,18 @@ class View(Frame):
         self.bind('<FocusIn>', self.on_focus)  # Bind on_focus method
         self.bind('<Key>', self.key_pressed)  # Bind key_pressed method
 
+    def size_grid(self, rows, columns):
+        self.size_rows(rows)
+        self.size_columns(columns)
+
+    def size_rows(self, rows):
+        for i in range(rows):
+            self.rowconfigure(i, weight=1)
+
+    def size_columns(self, columns):
+        for i in range(columns):
+            self.columnconfigure(i, weight=1)
+
     # TODO: from trying to envisage tests, this seems to do a LOT for one method
     # --> is this a problem?
     def add_subpage(self, constructor, make_button=True):
@@ -75,6 +87,7 @@ class View(Frame):
         for button in self.subpage_buttons:
             button.config(state=NORMAL)
 
+
 # Displays pity timers
 # Should be on a per set basis, with dropdown
 # Should also have some form of suggestion for pack to buy
@@ -120,10 +133,7 @@ class StatsView(View):
             self.total_numbers.update({rarity: total_number})
             self.mean_numbers.update({rarity: mean_number})
 
-        self.columnconfigure(0, weight=1)
-        self.columnconfigure(1, weight=1)
-        self.columnconfigure(2, weight=1)
-        self.columnconfigure(3, weight=1)
+        self.size_columns(4)
 
     def add_set_selector(self, model_variable, standard, wild):
         set_selector = OptionMenu(self, model_variable, "Card Set", 'All Sets', *standard, *wild)
@@ -176,10 +186,7 @@ class PackView(View):
         self.not_pack_button = Button(self, text="Not Pack")
         self.not_pack_button.grid(row=6, column=3, columnspan=1, sticky=NSEW, pady=20, padx=10)
 
-        self.columnconfigure(0, weight=1)
-        self.columnconfigure(1, weight=1)
-        self.columnconfigure(2, weight=1)
-        self.columnconfigure(3, weight=1)
+        self.size_columns(4)
 
     def set_image(self, image):
         # takes the result of Image.open, and pushes result to the image frame
