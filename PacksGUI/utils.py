@@ -118,14 +118,9 @@ def pity_timer(set, rarity):
     # put into reverse date order
     set_packs.sort(key=lambda entry: entry['date'], reverse=True)
 
-    # We're counting lines till we hit the rarity
-    # Might be better off using a tinydb query to find first occurrence
-    # Can we then get some form of index from that, and ensure things have been sorted by correct key?
-    timer = 0
-    for pack in set_packs:
-        if pack[rarity] > 0:
-            break
-        timer += 1
+    # Generator that enumerates the packs, and selects only those that contain rarity
+    # then we take the first item with next which produces timer + pack (should we need that)
+    timer, pack = next((i for i in enumerate(set_packs) if i[1][rarity] > 0), (None, None))
     return timer
 
 

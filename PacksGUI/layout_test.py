@@ -33,7 +33,7 @@ class GUI:
         self.configure_stats_view()
 
         self.pity_view = self.main_view.add_subpage(PityView)
-        self.layout()
+        self.configure_pity_view()
 
         self.main_view.raise_view(self.pack_view.name)
 
@@ -82,7 +82,8 @@ class GUI:
         pass
 
     def configure_pity_view(self):
-        pass
+        self.pity_view.add_set_selector(self.model.pity_card_set, self.model.standard_sets, self.model.wild_sets)
+        self.pity_view.bind_current_timers(self.model.pity_current_timers)
 
     def update_image(self):
         try:
@@ -162,6 +163,8 @@ class GUI:
                 # self.pack_view.subpages['Arena Rewards'].clear_boxes()
 
                 self.pack_view.subpages['Arena Rewards'].raise_view('Arena1')
+
+                # TODO model submit in here
 
         elif active_page == 'Season End':  # End of season rewards page
             pass

@@ -117,13 +117,12 @@ for entry in data['Pack Data'][1:]:
         # if all has gone well, we can push the data to the tinydb file
         # date is now the sort key
 
-        # Todo: Really weird we aren't storing the actual filename here.
-        # ---> Sure it takes space, but it's so much easier to then show image later
+        # TODO: test filename
         card_table.insert({
             'date': date_from_filename(matches[image_index]),
             'commons': entry[1], 'rares': entry[2], 'epics': entry[3], 'legendaries': entry[4],
             'golden_commons': entry[5], 'golden_rares': entry[6], 'golden_epics': entry[7], 'golden_legendaries': entry[8],
-            'notes': entry[10], 'set': entry[11]
+            'notes': entry[10], 'set': entry[11], 'filename': matches[image_index]
         })
         image_index += 1
 

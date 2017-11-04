@@ -64,6 +64,15 @@ class Model:
         # Any time you change which card set you're viewing, reloads data
         self.view_card_set.trace_variable('w', self.extract_data)
 
+        # ~~ Pity view ~~
+        # NOTE: hard coding pity values in here
+        # G.Epics and G.Legendaries are conservative best estimates
+        self.pity_max = dict(zip(Hearthstone.rarities[2:], [10, 40, 25, 30, 150, 350]))
+        self.pity_card_set = StringVar()
+        # We ignore common and rare from our pity timers, they are guaranteed almost every pack
+        self.pity_current_timers = {rarity: StringVar() for rarity in Hearthstone.rarities[2:]}
+        self.pity_card_set.trace_variable('w', self.extract_timers)
+
         self.find_images()
         self.next_pack()
 
@@ -146,12 +155,29 @@ class Model:
 
         # Todo: check the current subpage, and modify behaviour accordingly
 
+        current_page = self.current_subpage.get()
+
+        if current_page == "Packs":
+            self.submit_cardpack()
+        elif current_page == "Arena2":
+            self.submit_arena()
+        elif current_page == "Season End5":
+            self.submit_eos()
+        elif current_page == "Other":
+            self.submit_other()
+        else:
+            # TODO raise some form of error, unrecognised subpage
+            pass
+
+    def submit_cardpack(self):
         with TinyDB(self.db_file) as db:
             card_table = db.table('card_data')
             card_table.insert({
                 'date': self.current_pack.sortkey,
                 **{rarity: self.quantities[rarity].get() for rarity in Hearthstone.rarities},
-                'notes': self.notes.get(), 'set': self.acronyms[self.card_set.get()]
+                'notes': self.notes.get(),
+                'set': self.acronyms[self.card_set.get()],
+                'filename': self.current_pack.image_name
             })
 
         pack_folder = self.config['output']['packs']
@@ -167,8 +193,16 @@ class Model:
 
         # TODO: check this is needed
         self.extract_data()
-
         self.next_pack()
+
+    def submit_arena(self):
+        pass
+
+    def submit_eos(self):
+        pass
+
+    def submit_other(self):
+        pass
 
     def not_pack(self):
         # "Not pack" will likely be removed and made into "skip".
@@ -211,3 +245,29 @@ class Model:
                 self.viewed_mean_quantities[rarity].set('###')
             else:
                 self.viewed_mean_quantities[rarity].set('{:.3f}'.format(float(count[rarity])/total_packs))
+
+    # TODO: test
+    def extract_timers(self, *callback):
+        # called when the pity_card_set variable changes
+        # looks at new value, and gets new set
+        # performs required db queries and updates variables
+        set_name = self.pity_card_set.get()
+
+        if set_name == 'Card Set':
+            return
+        else:
+            acronym = self.acronyms[set_name]
+            pack = Query()
+            with TinyDB(self.db_file) as db:
+                card_table = db.table('card_data')
+                results = card_table.search(pack['set'] == acronym)
+
+        # Using stringvars, so we can return "<current>/<max>"
+        results.sort(key=lambda entry: entry['date'], reverse=True)
+        for rarity in Hearthstone.rarities[2:]:
+            # Generator that enumerates the packs, and selects only those that contain rarity
+            # then we take the first item with next which produces timer + pack (should we need that)
+            # Using len(results) if no pack is found, ie all packs count
+            # TODO: add offsets to the len for the new guaranteed leg in 10
+            timer, pack = next((i for i in enumerate(results) if i[1][rarity] > 0), (len(results), None))
+            self.pity_current_timers[rarity].set('{}/{}'.format(timer, self.pity_max[rarity]))

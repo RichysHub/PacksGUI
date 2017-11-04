@@ -103,6 +103,38 @@ class PityView(View):
         self.master = master
         self.name = 'Pity'
 
+        # Suggestion block
+        # --> Legendary in 2 > Golden common in 1
+        # --> Weight by max timer, not value, but use value to break ties?
+        # --> Need a heuristic that gives reasonable sorting
+
+        self.set_selector = None
+        self.current_timers = {}
+
+        for idx, rarity in enumerate(Hearthstone.rarities[2:]):
+            boundary = Frame(self)
+            rarity_label = Label(boundary, text=rarity)
+            rarity_label.pack()
+            current_timer = Label(boundary, text='#/#')
+            current_timer.pack(pady=10)
+            # Grid into a 3 wide array
+            boundary.grid(row=1+(idx//3), column=idx % 3, padx=20, pady=30)
+
+            self.current_timers.update({rarity: current_timer})
+
+        self.size_columns(3)
+
+    def add_set_selector(self, model_variable, standard, wild):
+        set_selector = OptionMenu(self, model_variable, "Card Set", *standard, *wild)
+        # Using patch to fix bug with multiple menus
+        optionmenu_patch(set_selector, model_variable)
+        set_selector['menu'].insert_separator(len(standard))
+        set_selector.grid(row=0, column=0, columnspan=5, pady=20)
+        self.set_selector = set_selector
+
+    def bind_current_timers(self, variable_dict):
+        for rarity in Hearthstone.rarities[2:]:
+            self.current_timers[rarity].config(textvariable=variable_dict[rarity])
 
 class StatsView(View):
     def __init__(self, master):
@@ -128,10 +160,20 @@ class StatsView(View):
             mean_number = Label(boundary, text='#')
             mean_number.pack()
             # Grid into a 4 wide array
-            boundary.grid(row=2+int(idx/4), column=idx % 4, padx=20, pady=30)
+            boundary.grid(row=2+(idx//4), column=idx % 4, padx=20, pady=30)
 
             self.total_numbers.update({rarity: total_number})
             self.mean_numbers.update({rarity: mean_number})
+
+        # Average dust disenchant per pack
+        # Average dust enchant per pack
+
+        # Graphs for:
+        # --> packs over time
+        # --> packs of set vs total packs
+        # ----> This one is a little redundant?
+        # --> disenchant values
+
 
         self.size_columns(4)
 
@@ -211,5 +253,3 @@ class MainView(View):
         self.subpage_button_frame.grid(row=0, column=0)
         self.subpage_frame = Frame(self)
         self.subpage_frame.grid(row=1, column=0)
-
-
