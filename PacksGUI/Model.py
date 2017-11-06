@@ -55,7 +55,7 @@ class Model:
         self.viewed_total_quantities = {}  # quantities for each rarity, for stats view
         self.viewed_mean_quantities = {}
         self.view_card_set = StringVar()  # card set, as deemed by stats view
-        self.viewed_total_packs = IntVar()  # packs for stats view card set
+        self.viewed_total_packs = StringVar()  # packs for stats view card set
 
         self.quantities = {rarity: IntVar() for rarity in Hearthstone.rarities}
         self.viewed_total_quantities = {rarity: IntVar() for rarity in Hearthstone.rarities}
@@ -69,6 +69,7 @@ class Model:
         # G.Epics and G.Legendaries are conservative best estimates
         self.pity_max = dict(zip(Hearthstone.rarities[2:], [10, 40, 25, 30, 150, 350]))
         self.pity_card_set = StringVar()
+        self.pity_total_packs = StringVar()
         # We ignore common and rare from our pity timers, they are guaranteed almost every pack
         self.pity_current_timers = {rarity: StringVar() for rarity in Hearthstone.rarities[2:]}
         self.pity_card_set.trace_variable('w', self.extract_timers)
@@ -234,11 +235,12 @@ class Model:
                 results = card_table.search(pack['set'] == acronym)
 
         total_packs = len(results)
+        self.viewed_total_packs.set('{} Packs'.format(total_packs))
+
         count = Counter()
         for pack_line in results:
             count.update({k: pack_line[k] for k in Hearthstone.rarities})
 
-        self.viewed_total_packs.set(total_packs)
         for rarity in Hearthstone.rarities:
             self.viewed_total_quantities[rarity].set(count[rarity])
             if total_packs == 0:
@@ -246,7 +248,6 @@ class Model:
             else:
                 self.viewed_mean_quantities[rarity].set('{:.3f}'.format(float(count[rarity])/total_packs))
 
-    # TODO: test
     def extract_timers(self, *callback):
         # called when the pity_card_set variable changes
         # looks at new value, and gets new set
@@ -261,6 +262,7 @@ class Model:
             with TinyDB(self.db_file) as db:
                 card_table = db.table('card_data')
                 results = card_table.search(pack['set'] == acronym)
+            self.pity_total_packs.set('{} Packs'.format(len(results)))
 
         # Using stringvars, so we can return "<current>/<max>"
         results.sort(key=lambda entry: entry['date'], reverse=True)
@@ -269,5 +271,8 @@ class Model:
             # then we take the first item with next which produces timer + pack (should we need that)
             # Using len(results) if no pack is found, ie all packs count
             # TODO: add offsets to the len for the new guaranteed leg in 10
+            # --> Actually, do we even care to implement this?
+            # --> At the start of a new expansion, 10 packs is quickly done
+            # --> Lot of dev time compared to usage
             timer, pack = next((i for i in enumerate(results) if i[1][rarity] > 0), (len(results), None))
             self.pity_current_timers[rarity].set('{}/{}'.format(timer, self.pity_max[rarity]))

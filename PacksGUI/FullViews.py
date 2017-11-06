@@ -1,4 +1,4 @@
-from tkinter import StringVar, NSEW, Label, E, W, Frame, DISABLED, NORMAL
+from tkinter import StringVar, NSEW, Label, E, W, Frame, DISABLED, NORMAL, CENTER
 from tkinter.ttk import Button, OptionMenu
 
 from PIL import Image, ImageTk
@@ -76,7 +76,7 @@ class View(Frame):
 
     def on_focus(self, *args):
         # Called when focus is set to this widget
-        print('{}: I just got focus :3'.format(self.name))
+        print('{}: I just got focus'.format(self.name))
         pass
 
     def disable_buttons(self):
@@ -108,8 +108,18 @@ class PityView(View):
         # --> Weight by max timer, not value, but use value to break ties?
         # --> Need a heuristic that gives reasonable sorting
 
+        # Do we want 2 suggestion blocks? 1 overall, 1 set specific?
+
+        # Idea: Just current/Max, highest wins
+        # weights epic in 1 = legendary in 4 = Golden rare in 3 = g.epic in 15 = g.leg in 35
+        # The g.leg is of course nice, but if it's hiding a legendary in 5 from a different set :/
+        # Perhaps a max cap of say things that are 10 off max?
+
         self.set_selector = None
         self.current_timers = {}
+
+        self.total_packs = Label(self, text='# Packs', justify=CENTER)
+        self.total_packs.grid(row=1, column=0, columnspan=3, sticky=NSEW)
 
         for idx, rarity in enumerate(Hearthstone.rarities[2:]):
             boundary = Frame(self)
@@ -118,7 +128,7 @@ class PityView(View):
             current_timer = Label(boundary, text='#/#')
             current_timer.pack(pady=10)
             # Grid into a 3 wide array
-            boundary.grid(row=1+(idx//3), column=idx % 3, padx=20, pady=30)
+            boundary.grid(row=2+(idx//3), column=idx % 3, padx=20, pady=30, sticky=NSEW)
 
             self.current_timers.update({rarity: current_timer})
 
@@ -136,6 +146,12 @@ class PityView(View):
         for rarity in Hearthstone.rarities[2:]:
             self.current_timers[rarity].config(textvariable=variable_dict[rarity])
 
+    def bind_pack_number(self, variable):
+        # Using the combined label & val in a string var here
+        # Inconsistent, but it makes it much easier here
+        self.total_packs.config(textvariable=variable)
+
+
 class StatsView(View):
     def __init__(self, master):
         super().__init__(master)
@@ -143,10 +159,8 @@ class StatsView(View):
         self.name = 'Stats'
 
         self.set_selector = None
-        total_packs_label = Label(self, text='Total packs opened:')
-        total_packs_label.grid(row=1, column=0, columnspan=2, sticky=E)
-        self.total_packs_number = Label(self, text='Not set')
-        self.total_packs_number.grid(row=1, column=2, columnspan=2, sticky=W)
+        self.total_packs = Label(self, text='# Packs')
+        self.total_packs.grid(row=1, column=1, columnspan=2, sticky=NSEW)
 
         self.total_numbers = {}
         self.mean_numbers = {}
@@ -160,7 +174,7 @@ class StatsView(View):
             mean_number = Label(boundary, text='#')
             mean_number.pack()
             # Grid into a 4 wide array
-            boundary.grid(row=2+(idx//4), column=idx % 4, padx=20, pady=30)
+            boundary.grid(row=2+(idx//4), column=idx % 4, padx=20, pady=30, sticky=NSEW)
 
             self.total_numbers.update({rarity: total_number})
             self.mean_numbers.update({rarity: mean_number})
@@ -168,6 +182,7 @@ class StatsView(View):
         # Average dust disenchant per pack
         # Average dust enchant per pack
 
+        # Graphs in a buttoned subpage area?
         # Graphs for:
         # --> packs over time
         # --> packs of set vs total packs
@@ -189,7 +204,7 @@ class StatsView(View):
 
     def bind_pack_number(self, variable):
         # binds the variable as the value for the pack number display
-        self.total_packs_number.config(textvariable=variable)
+        self.total_packs.config(textvariable=variable)
 
     def bind_total_cards_numbers(self, variable_dict):
         for rarity in Hearthstone.rarities:

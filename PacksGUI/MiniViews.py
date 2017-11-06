@@ -246,6 +246,7 @@ class SeasonMiniView(View):
 
         # Todo: Add a month dropdown, which defaults to the month guessed by the filename
         # --> Should never have to use it, but it's a nice option to have in case of failure
+        # --> Use case would be if we played May, missed June. May rewards would show in July?
 
         self.max_rank_entry = None
         self.end_rank_entry = None

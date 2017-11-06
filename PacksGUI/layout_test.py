@@ -1,10 +1,7 @@
 #!/usr/bin/env python
 
-# Todo: refactor to remove the import * bad habits
-
-# from tkinter import Tk, Menu, PhotoImage, Label, Spinbox, Frame
 import configparser
-from tkinter import *
+from tkinter import Tk, Menu
 
 from PIL import Image
 
@@ -84,6 +81,7 @@ class GUI:
     def configure_pity_view(self):
         self.pity_view.add_set_selector(self.model.pity_card_set, self.model.standard_sets, self.model.wild_sets)
         self.pity_view.bind_current_timers(self.model.pity_current_timers)
+        self.pity_view.bind_pack_number(self.model.pity_total_packs)
 
     def update_image(self):
         try:

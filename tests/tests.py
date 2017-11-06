@@ -268,7 +268,13 @@ class TestView(unittest.TestCase):
 
 
 class TestPityView(unittest.TestCase):
-    pass
+    def setUp(self):
+        root = tkinter.Tk()
+        self.view = FullViews.PityView(root)
+
+    def test_pack_number_variable_bound(self):
+        self.view.bind_pack_number(tkinter.StringVar())
+        self.assertIsNotNone(self.view.total_packs.cget('textvariable'))
 
 
 class TestStatsView(unittest.TestCase):
@@ -286,7 +292,7 @@ class TestStatsView(unittest.TestCase):
 
     def test_pack_number_variable_bound(self):
         self.view.bind_pack_number(tkinter.StringVar())
-        self.assertIsNotNone(self.view.total_packs_number.cget('textvariable'))
+        self.assertIsNotNone(self.view.total_packs.cget('textvariable'))
 
     def test_total_cards_variable_bound(self):
 
@@ -483,7 +489,7 @@ class TestModel(unittest.TestCase):
         integer_variables = [md.reward_dust, md.reward_gold,
                              md.reward_packs, md.arena_wins,
                              md.arena_losses, md.end_rank,
-                             md.max_rank, md.viewed_total_packs]
+                             md.max_rank]
 
         for variable in string_variables:
             with self.subTest(variable=variable):
@@ -799,16 +805,16 @@ class TestModel(unittest.TestCase):
 
     # ~~ Test extract_data ~~
     # Todo: Currently just tests for pack data extraction, will need to add Arena and EOS
-    # when their relavent viewing pages have been created
+    # when their relevant viewing pages have been created
 
     def test_extract_data(self):
         # TODO: needs to update with the changes to the save format and sortkey
         note_string_1 = 'Some Interesting Notes'
-        sortkey_1 = '2017/01/02/03/04/05/06'
+        sortkey_1 = '2017/01/02/03/04/05'
         note_string_2 = 'Some More Interesting Notes'
-        sortkey_2 = '2017/07/08/09/10/11/12'
+        sortkey_2 = '2017/07/08/09/10/11'
         note_string_3 = 'Even More Interesting Notes'
-        sortkey_3 = '2017/01/13/14/15/16/17'
+        sortkey_3 = '2017/01/13/14/15/16'
 
         pack_1 = {'date': sortkey_1, 'common': 4, 'rare': 1, 'epic': 0, 'legendary': 0,
                   'golden_common': 0, 'golden_rare': 0, 'golden_epic': 0, 'golden_legendary': 0,
@@ -838,7 +844,7 @@ class TestModel(unittest.TestCase):
         model.view_card_set.set('Knights of the Frozen Throne')
         model.extract_data()
 
-        self.assertEqual(model.viewed_total_packs.get(), 2)
+        self.assertEqual(model.viewed_total_packs.get(), '2 Packs')
 
         self.assertEqual(model.viewed_mean_quantities['common'].get(), '3.000')
         self.assertEqual(model.viewed_mean_quantities['rare'].get(), '1.000')
@@ -861,7 +867,7 @@ class TestModel(unittest.TestCase):
         model.view_card_set.set('Classic')
         model.extract_data()
 
-        self.assertEqual(model.viewed_total_packs.get(), 1)
+        self.assertEqual(model.viewed_total_packs.get(), '1 Packs')
 
         self.assertEqual(model.viewed_mean_quantities['common'].get(), '2.000')
         self.assertEqual(model.viewed_mean_quantities['rare'].get(), '1.000')
@@ -884,7 +890,7 @@ class TestModel(unittest.TestCase):
         model.view_card_set.set('All Sets')
         model.extract_data()
 
-        self.assertEqual(model.viewed_total_packs.get(), 3)
+        self.assertEqual(model.viewed_total_packs.get(), '3 Packs')
 
         self.assertEqual(model.viewed_mean_quantities['common'].get(), '2.667')
         self.assertEqual(model.viewed_mean_quantities['rare'].get(), '1.000')
@@ -907,7 +913,7 @@ class TestModel(unittest.TestCase):
         model.view_card_set.set('Whispers of the Old Gods')
         model.extract_data()
 
-        self.assertEqual(model.viewed_total_packs.get(), 0)
+        self.assertEqual(model.viewed_total_packs.get(), '0 Packs')
 
         for rarity in Hearthstone.rarities:
             with self.subTest(rarity=rarity):
@@ -918,6 +924,83 @@ class TestModel(unittest.TestCase):
         # Function simply returns without doing anything
         # really hard to test this...
         pass
+
+    def test_extract_timers(self):
+
+        self.config.set('sets_standard', 'Knights of the Frozen Throne', 'KFT')
+        self.config.set('sets_standard', 'Whispers of the Old Gods', 'WotOG')
+
+        set_values = {'KFT': (10, 1, 5),
+                      'WotOG': (13, 1, 0),
+                      'Classic': (0, 2, 10),
+                      'GvG': (15, 0, 10)}
+
+        base_date = '2017/01/{:02}/03/04/05'
+
+        packs = []
+
+        filler = lambda day, card_set: {'date': base_date.format(day), 'common': 4, 'rare': 1, 'epic': 0, 'legendary': 0,
+                'golden_common': 0, 'golden_rare': 0, 'golden_epic': 0, 'golden_legendary': 0,
+                'notes': '', 'set': card_set}
+
+        pull = lambda day, card_set: {'date': base_date.format(day), 'common': 3, 'rare': 1, 'epic': 0, 'legendary': 1,
+                'golden_common': 0, 'golden_rare': 0, 'golden_epic': 0, 'golden_legendary': 0,
+                'notes': '', 'set': card_set}
+
+        # We add, chronologically, packs before and after the legendary
+        for set_, (prefill, pulls, postfill) in set_values.items():
+
+            day = 0
+
+            for i in range(0, prefill):
+                day += 1
+                packs.append(filler(day, set_))
+
+            for i in range(0, pulls):
+                day += 1
+                packs.append(pull(day, set_))
+
+            for i in range(0, postfill):
+                day += 1
+                packs.append(filler(day, set_))
+
+        # Reverse the order to ensure sortkey is used correctly
+        packs.reverse()
+
+        db = TinyDB(self.database_path)
+        card_table = db.table('card_data')
+        for pack in packs:
+            card_table.insert(pack)
+        db.close()
+
+        model = Model(self.config)
+
+        # Have to disable the trace the pity_card_set variable, so we can override value
+        model.pity_card_set.trace_vdelete(*model.pity_card_set.trace_vinfo()[0])
+
+        timer_var = model.pity_current_timers['legendary']
+        goal_str = '{{}}/{max}'.format(max=model.pity_max['legendary'])
+
+        model.pity_card_set.set('Knights of the Frozen Throne')
+        model.extract_timers()
+        # Should be # of packs opened since legendary
+        self.assertEqual(timer_var.get(), goal_str.format(set_values['KFT'][2]))
+
+        model.pity_card_set.set('Whispers of the Old Gods')
+        model.extract_timers()
+        # Should be zero
+        self.assertEqual(timer_var.get(), goal_str.format(set_values['WotOG'][2]))
+
+        model.pity_card_set.set('Classic')
+        model.extract_timers()
+        # Check back-to-back handled correctly
+        self.assertEqual(timer_var.get(), goal_str.format(set_values['Classic'][2]))
+
+        model.pity_card_set.set('Goblins vs Gnomes')
+        model.extract_timers()
+        # No pulls so should be total pack count
+        self.assertEqual(timer_var.get(), goal_str.format(set_values['GvG'][0] + set_values['GvG'][2]))
+
 
 
 class TestGUI(unittest.TestCase):
