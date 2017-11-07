@@ -7,6 +7,7 @@ from tinydb import TinyDB, Query
 
 from CardPack import CardPack
 from Hearthstone import Hearthstone
+from utils import value_disenchant, value_enchant
 
 
 # TODO: Model is currently a big blob, could really be split up a little
@@ -60,6 +61,9 @@ class Model:
         self.quantities = {rarity: IntVar() for rarity in Hearthstone.rarities}
         self.viewed_total_quantities = {rarity: IntVar() for rarity in Hearthstone.rarities}
         self.viewed_mean_quantities = {rarity: StringVar() for rarity in Hearthstone.rarities}
+
+        self.enchant_value = StringVar()
+        self.disenchant_value = StringVar()
 
         # Any time you change which card set you're viewing, reloads data
         self.view_card_set.trace_variable('w', self.extract_data)
@@ -247,6 +251,13 @@ class Model:
                 self.viewed_mean_quantities[rarity].set('###')
             else:
                 self.viewed_mean_quantities[rarity].set('{:.3f}'.format(float(count[rarity])/total_packs))
+
+        if total_packs == 0:
+            self.enchant_value.set('Average Enchant\n')
+            self.disenchant_value.set('Average Disenchant\n')
+        else:
+            self.enchant_value.set('Average Enchant\n{:.1f}'.format(float(value_enchant(count) / total_packs)))
+            self.disenchant_value.set('Average Disenchant\n{:.1f}'.format(float(value_disenchant(count) / total_packs)))
 
     def extract_timers(self, *callback):
         # called when the pity_card_set variable changes

@@ -21,6 +21,8 @@ config.read('../PacksGUI_conf.ini')
 ODS_FILE = "E:\\Users\\Richard\\Desktop\\GUI_Sandbox\\Desktop Records.ods"
 CARD_DATA_FILE = config['filepaths']['tinydb']
 IMAGE_DIRECTORY = config['output']['packs']
+# Testing with some real data, pointing to real directory of images
+IMAGE_DIRECTORY = "E:\\Users\\Richard\\Desktop\\Hearthstone Screenshots\\Packs"
 
 db = TinyDB(CARD_DATA_FILE)
 card_table = db.table('card_data')
@@ -104,9 +106,10 @@ for entry in data['Pack Data'][1:]:
 
         # if the image is in the bad images array, we just skip it
         # use while in case of multiple bad images in a row
-        while matches[image_index] in bad_images:
-            # by increasing image index, we go on to just use the next one
-            image_index += 1
+        if matches:
+            while matches[image_index] in bad_images:
+                # by increasing image index, we go on to just use the next one
+                image_index += 1
 
         # if we aren't left with any more images for this record, we print the error and move on
         if image_index >= len(matches):
@@ -120,8 +123,8 @@ for entry in data['Pack Data'][1:]:
         # TODO: test filename
         card_table.insert({
             'date': date_from_filename(matches[image_index]),
-            'commons': entry[1], 'rares': entry[2], 'epics': entry[3], 'legendaries': entry[4],
-            'golden_commons': entry[5], 'golden_rares': entry[6], 'golden_epics': entry[7], 'golden_legendaries': entry[8],
+            'common': entry[1], 'rare': entry[2], 'epic': entry[3], 'legendary': entry[4],
+            'golden_common': entry[5], 'golden_rare': entry[6], 'golden_epic': entry[7], 'golden_legendary': entry[8],
             'notes': entry[10], 'set': entry[11], 'filename': matches[image_index]
         })
         image_index += 1

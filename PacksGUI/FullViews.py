@@ -164,6 +164,7 @@ class StatsView(View):
         self.total_numbers = {}
         self.mean_numbers = {}
 
+        # TODO: color mean values green/red depending how they compare to average?
         for idx, rarity in enumerate(Hearthstone.rarities):
             boundary = Frame(self)
             rarity_label = Label(boundary, text=Hearthstone.rarity_display_names[rarity])
@@ -173,13 +174,18 @@ class StatsView(View):
             mean_number = Label(boundary, text='#')
             mean_number.pack()
             # Grid into a 4 wide array
-            boundary.grid(row=2+(idx//4), column=idx % 4, padx=20, pady=30, sticky=NSEW)
+            boundary.grid(row=3+(idx//4), column=idx % 4, padx=20, pady=30, sticky=NSEW)
 
             self.total_numbers.update({rarity: total_number})
             self.mean_numbers.update({rarity: mean_number})
 
         # Average dust disenchant per pack
         # Average dust enchant per pack
+
+        self.disenchant_value = Label(self, text='Average Disenchant\n100')
+        self.disenchant_value.grid(row=2, column=1, pady=20)
+        self.enchant_value = Label(self, text='Average Enchant\n180')
+        self.enchant_value.grid(row=2, column=2, pady=20)
 
         # Graphs in a buttoned subpage area?
         # Graphs for:
@@ -212,6 +218,10 @@ class StatsView(View):
     def bind_mean_cards_numbers(self, variable_dict):
         for rarity in Hearthstone.rarities:
             self.mean_numbers[rarity].config(textvariable=variable_dict[rarity])
+
+    def bind_enchant_values(self, disenchant_variable, enchant_variable):
+        self.disenchant_value.config(textvariable=disenchant_variable)
+        self.enchant_value.config(textvariable=enchant_variable)
 
 
 # Todo: rename to something like 'Image storing', given does more than packs now

@@ -76,6 +76,7 @@ class GUI:
         self.stats_view.bind_pack_number(self.model.viewed_total_packs)
         self.stats_view.bind_total_cards_numbers(self.model.viewed_total_quantities)
         self.stats_view.bind_mean_cards_numbers(self.model.viewed_mean_quantities)
+        self.stats_view.bind_enchant_values(self.model.disenchant_value, self.model.enchant_value)
         pass
 
     def configure_pity_view(self):
