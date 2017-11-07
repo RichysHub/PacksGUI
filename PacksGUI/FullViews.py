@@ -6,7 +6,6 @@ from PIL import Image, ImageTk
 from Hearthstone import Hearthstone
 from utils import optionmenu_patch
 
-
 class View(Frame):
     """ Abstract View class from which other views inherit """
 
@@ -123,7 +122,7 @@ class PityView(View):
 
         for idx, rarity in enumerate(Hearthstone.rarities[2:]):
             boundary = Frame(self)
-            rarity_label = Label(boundary, text=rarity)
+            rarity_label = Label(boundary, text=Hearthstone.rarity_display_names[rarity])
             rarity_label.pack()
             current_timer = Label(boundary, text='#/#')
             current_timer.pack(pady=10)
@@ -167,7 +166,7 @@ class StatsView(View):
 
         for idx, rarity in enumerate(Hearthstone.rarities):
             boundary = Frame(self)
-            rarity_label = Label(boundary, text=rarity)
+            rarity_label = Label(boundary, text=Hearthstone.rarity_display_names[rarity])
             rarity_label.pack()
             total_number = Label(boundary, text='#')
             total_number.pack(pady=10)

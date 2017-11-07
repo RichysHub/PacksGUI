@@ -51,6 +51,8 @@ class Hearthstone:
     # TODO: perhaps separate names rarities, for UI pieces
     rarities = ['common', 'rare', 'epic', 'legendary',
                 'golden_common', 'golden_rare', 'golden_epic', 'golden_legendary']
+    rarity_display_names = dict(zip(rarities, ['Common', 'Rare', 'Epic', 'Legendary',
+                                               'Golden Common', 'Golden Rare', 'Golden Epic', 'Golden Legendary']))
 
     # TODO: maybe these things should use a dict(zip()), so rarity names are only in 1 place
     default_pack = {'common': 4, 'rare': 1, 'epic': 0, 'legendary': 0,
