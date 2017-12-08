@@ -66,9 +66,6 @@ class Model:
         self.enchant_value = StringVar()
         self.disenchant_value = StringVar()
 
-        # Any time you change which card set you're viewing, reloads data
-        #self.view_card_set.trace_variable('w', self.extract_data)
-
         # ~~ Pity view ~~
         # NOTE: hard coding pity values in here
         # G.Epics and G.Legendaries are conservative best estimates
@@ -86,7 +83,6 @@ class Model:
 
     def bind_graph_update_function(self, function):
         self.view_card_set.trace_variable('w', function)
-
 
     def find_images(self):
         """Finds all the screenshots on the desktop that might be packs, and stores them"""
@@ -192,12 +188,7 @@ class Model:
                 'filename': self.current_pack.image_name
             })
 
-        pack_folder = self.config['output']['packs']
-        dest_folder = os.path.join(pack_folder, str(self.current_pack.date.year))
-
-        # check year folder exists
-        if not os.path.exists(dest_folder):
-            os.mkdir(dest_folder)
+        dest_folder = self.fetch_destination('packs')
 
         destination = os.path.join(dest_folder, self.current_pack.image_name)
         # Todo: for testing, file movement is disabled
@@ -220,6 +211,18 @@ class Model:
         # "Not pack" will likely be removed and made into "skip".
         # Images for things other than packs will have a sub page of the storage screen
         self.next_pack()
+
+    def fetch_destination(self, output_name):
+        folder = self.config['output'][output_name]
+        path_parts = []
+        if self.config[output_name]['yearseperated']:
+            path_parts.append(str(self.current_pack.date.year))
+        if self.config[output_name]['monthseperated']:
+            path_parts.append(str(self.current_pack.date.month))
+        dest_folder = os.path.join(folder, *path_parts)
+
+        os.makedirs(dest_folder, exist_ok=True)  # create folder, and all intermediary folders, if needed
+        return dest_folder
 
     # Another alias. Can be cleaned up when refactoring if needed
     skip_image = next_pack
@@ -290,13 +293,9 @@ class Model:
 
         # Using stringvars, so we can return "<current>/<max>"
         results.sort(key=lambda entry: entry['date'], reverse=True)
-        for rarity in Hearthstone.rarities[2:]:
+        for rarity in Hearthstone.rarities[2:]:  # ignore <epics
             # Generator that enumerates the packs, and selects only those that contain rarity
             # then we take the first item with next which produces timer + pack (should we need that)
             # Using len(results) if no pack is found, ie all packs count
-            # TODO: add offsets to the len for the new guaranteed leg in 10
-            # --> Actually, do we even care to implement this?
-            # --> At the start of a new expansion, 10 packs is quickly done
-            # --> Lot of dev time compared to usage
             timer, pack = next((i for i in enumerate(results) if i[1][rarity] > 0), (len(results), None))
             self.pity_current_timers[rarity].set('{}/{}'.format(timer, self.pity_max[rarity]))

@@ -770,6 +770,8 @@ class TestModel(unittest.TestCase):
         # os.mkdir(pack_folder)
         pass
 
+    # ~~ Test fetch destination
+
     def test_handles_missing_directory(self):
         pass
 
@@ -837,9 +839,6 @@ class TestModel(unittest.TestCase):
         self.config.set('sets_standard', 'Whispers of the Old Gods', 'WotOG')
 
         model = Model(self.config)
-
-        # Have to disable the trace the vew_card_set variable, so we can override value
-        model.view_card_set.trace_vdelete(*model.view_card_set.trace_vinfo()[0])
 
         model.view_card_set.set('Knights of the Frozen Throne')
         model.extract_data()

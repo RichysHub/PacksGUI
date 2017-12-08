@@ -232,8 +232,6 @@ class StatsView(View):
         canvas.show()
         canvas.get_tk_widget().pack(fill=BOTH, expand=1)
 
-        print(canvas.get_width_height())
-
         self.size_columns(4)
 
     def add_set_selector(self, model_variable, standard, wild):
