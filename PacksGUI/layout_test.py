@@ -5,6 +5,7 @@ from tkinter import Tk, Menu
 
 from PIL import Image
 
+
 from MiniViews import PackMiniView, ArenaMiniView, SeasonMiniView, OtherMiniView
 from Model import Model
 from FullViews import PityView, StatsView, PackView, MainView
@@ -28,9 +29,14 @@ class GUI:
 
         self.stats_view = self.main_view.add_subpage(StatsView)
         self.configure_stats_view()
+        self.old_set = None
+
+        self.model.bind_graph_update_function(self.update_graphs)
 
         self.pity_view = self.main_view.add_subpage(PityView)
         self.configure_pity_view()
+
+        self.master.wm_title('Hearthstone screenshot cataloger')
 
         self.main_view.raise_view(self.pack_view.name)
 
@@ -83,6 +89,7 @@ class GUI:
         self.pity_view.add_set_selector(self.model.pity_card_set, self.model.standard_sets, self.model.wild_sets)
         self.pity_view.bind_current_timers(self.model.pity_current_timers)
         self.pity_view.bind_pack_number(self.model.pity_total_packs)
+        self.pity_view.bind_advice_text(self.model.pity_advice)
 
     def update_image(self):
         try:
@@ -171,6 +178,19 @@ class GUI:
             pass
         else:
             pass
+
+    def update_graphs(self, *callback):
+        new_set = self.model.view_card_set.get()
+        if new_set == self.old_set:
+            # callbacks from optionmenus fire twice, check it actually changed
+            return
+        # We bind this function so that it is called every time stats view dropdown is changed
+        self.old_set = new_set
+        graph_data = self.model.extract_data()
+        if graph_data:
+            x, y = graph_data
+            self.stats_view.clear()
+            self.stats_view.plot(x, y)
 
 
 if __name__ == '__main__':

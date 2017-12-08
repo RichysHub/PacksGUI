@@ -1,10 +1,27 @@
-from tkinter import StringVar, NSEW, Label, E, W, Frame, DISABLED, NORMAL, CENTER
+from tkinter import StringVar, NSEW, Label, Frame, DISABLED, NORMAL, CENTER, BOTH, LabelFrame
 from tkinter.ttk import Button, OptionMenu
 
 from PIL import Image, ImageTk
+import matplotlib
+matplotlib.use('TkAgg')
+
+from matplotlib.figure import Figure
+
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+import matplotlib.dates as mdates
+import datetime
 
 from Hearthstone import Hearthstone
 from utils import optionmenu_patch
+
+# matching default Windows grey
+matplotlib.rcParams['figure.facecolor'] = '0.95'
+
+
+years = mdates.YearLocator()   # every year
+months = mdates.MonthLocator()  # every month
+yearsFmt = mdates.DateFormatter('%Y')
+
 
 class View(Frame):
     """ Abstract View class from which other views inherit """
@@ -118,7 +135,7 @@ class PityView(View):
         self.current_timers = {}
 
         self.total_packs = Label(self, text='# Packs', justify=CENTER)
-        self.total_packs.grid(row=1, column=0, columnspan=3, sticky=NSEW)
+        self.total_packs.grid(row=0, column=0, columnspan=3, sticky=NSEW)
 
         for idx, rarity in enumerate(Hearthstone.rarities[2:]):
             boundary = Frame(self)
@@ -127,9 +144,12 @@ class PityView(View):
             current_timer = Label(boundary, text='#/#')
             current_timer.pack(pady=10)
             # Grid into a 3 wide array
-            boundary.grid(row=2+(idx//3), column=idx % 3, padx=20, pady=30, sticky=NSEW)
+            boundary.grid(row=1+(idx//3), column=idx % 3, padx=20, pady=30, sticky=NSEW)
 
             self.current_timers.update({rarity: current_timer})
+
+        self.advice_text = Label(self, text='I have no advice for you', justify=CENTER)
+        self.advice_text.grid(row=3, column=0, columnspan=3, sticky=NSEW)
 
         self.size_columns(3)
 
@@ -149,6 +169,9 @@ class PityView(View):
         # Using the combined label & val in a string var here
         # Inconsistent, but it makes it much easier here
         self.total_packs.config(textvariable=variable)
+
+    def bind_advice_text(self, string_var):
+        self.advice_text.config(textvariable=string_var)
 
 
 class StatsView(View):
@@ -194,6 +217,22 @@ class StatsView(View):
         # ----> This one is a little redundant?
         # --> disenchant values
 
+        self.stats_figure = Figure(figsize=(5, 4), dpi=100)
+        self.stats_plot = self.stats_figure.add_subplot(111)
+        t = [x/10 for x in range(0, 300)]
+        s = [x/100 for x in range(0, 300)]
+
+        self.stats_plot.plot(t, s)
+
+        self.fig_frame = Frame(self)
+        self.fig_frame.grid(row=6, column=0, columnspan=4, sticky=NSEW)
+
+        # a tk.DrawingArea
+        canvas = FigureCanvasTkAgg(self.stats_figure, master=self.fig_frame)
+        canvas.show()
+        canvas.get_tk_widget().pack(fill=BOTH, expand=1)
+
+        print(canvas.get_width_height())
 
         self.size_columns(4)
 
@@ -222,6 +261,21 @@ class StatsView(View):
     def bind_enchant_values(self, disenchant_variable, enchant_variable):
         self.disenchant_value.config(textvariable=disenchant_variable)
         self.enchant_value.config(textvariable=enchant_variable)
+
+    def plot(self, x, y):
+        self.stats_plot.plot(x, y)
+        self.stats_plot.xaxis.set_major_locator(years)
+        self.stats_plot.xaxis.set_major_formatter(yearsFmt)
+        self.stats_plot.xaxis.set_minor_locator(months)
+
+        datemin = datetime.date(2013, 1, 1)
+        datemax = datetime.date(datetime.date.today().year + 1, 1, 1)
+        self.stats_plot.set_xlim(datemin, datemax)
+        self.stats_figure.canvas.draw()
+
+    def clear(self):
+        self.stats_plot.clear()
+        self.stats_figure.canvas.draw()
 
 
 # Todo: rename to something like 'Image storing', given does more than packs now

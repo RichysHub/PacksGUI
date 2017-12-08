@@ -4,6 +4,7 @@ from tkinter import StringVar, IntVar
 
 from PIL import Image
 from tinydb import TinyDB, Query
+from datetime import datetime
 
 from CardPack import CardPack
 from Hearthstone import Hearthstone
@@ -66,7 +67,7 @@ class Model:
         self.disenchant_value = StringVar()
 
         # Any time you change which card set you're viewing, reloads data
-        self.view_card_set.trace_variable('w', self.extract_data)
+        #self.view_card_set.trace_variable('w', self.extract_data)
 
         # ~~ Pity view ~~
         # NOTE: hard coding pity values in here
@@ -77,9 +78,15 @@ class Model:
         # We ignore common and rare from our pity timers, they are guaranteed almost every pack
         self.pity_current_timers = {rarity: StringVar() for rarity in Hearthstone.rarities[2:]}
         self.pity_card_set.trace_variable('w', self.extract_timers)
+        self.pity_advice = StringVar()
+
 
         self.find_images()
         self.next_pack()
+
+    def bind_graph_update_function(self, function):
+        self.view_card_set.trace_variable('w', function)
+
 
     def find_images(self):
         """Finds all the screenshots on the desktop that might be packs, and stores them"""
@@ -217,7 +224,7 @@ class Model:
     # Another alias. Can be cleaned up when refactoring if needed
     skip_image = next_pack
 
-    def extract_data(self, *callback):
+    def extract_data(self):
         # called when the view_card_set variable changes
         # looks at the new value, and determines if it is a set, or 'All Sets'
         # performs requires queries on the tinyDB, and updates any variables to these value
@@ -239,6 +246,10 @@ class Model:
                 results = card_table.search(pack['set'] == acronym)
 
         total_packs = len(results)
+
+        dates = [datetime(*[int(val) for val in result['date'].split('/')]) for result in results]
+        packs = list(range(1, total_packs+1))
+
         self.viewed_total_packs.set('{} Packs'.format(total_packs))
 
         count = Counter()
@@ -258,6 +269,8 @@ class Model:
         else:
             self.enchant_value.set('Average Enchant\n{:.1f}'.format(float(value_enchant(count) / total_packs)))
             self.disenchant_value.set('Average Disenchant\n{:.1f}'.format(float(value_disenchant(count) / total_packs)))
+
+        return dates, packs
 
     def extract_timers(self, *callback):
         # called when the pity_card_set variable changes
