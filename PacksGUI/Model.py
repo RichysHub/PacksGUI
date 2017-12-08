@@ -215,9 +215,9 @@ class Model:
     def fetch_destination(self, output_name):
         folder = self.config['output'][output_name]
         path_parts = []
-        if self.config[output_name]['yearseperated']:
+        if self.config[output_name]['yearseperated'] == 'yes':
             path_parts.append(str(self.current_pack.date.year))
-        if self.config[output_name]['monthseperated']:
+        if self.config[output_name]['monthseperated'] == 'yes':
             path_parts.append(str(self.current_pack.date.month))
         dest_folder = os.path.join(folder, *path_parts)
 
