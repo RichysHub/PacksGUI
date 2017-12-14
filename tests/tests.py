@@ -25,6 +25,16 @@ from Hearthstone import Hearthstone, Reward
 # Make sure you aren't pitching test code vs real code for no reason
 # tests where it's easy to construct, but hard for the real code to deconstruct are great though
 
+class CustomAssertions:
+    def assertFileExists(self, path):
+        if not os.path.lexists(path):
+            raise AssertionError('File not exists in path "' + path + '".')
+
+    def assertFileNotExists(self, path):
+        if os.path.lexists(path):
+            raise AssertionError('File exists in path "' + path + '".')
+
+
 class TestIntScroller(unittest.TestCase):
 
     def setUp(self):
@@ -433,7 +443,7 @@ class TestMainView(unittest.TestCase):
     pass
 
 
-class TestModel(unittest.TestCase):
+class TestModel(unittest.TestCase, CustomAssertions):
 
     def make_image(self, filepath):
         # Full HD res images
@@ -773,13 +783,173 @@ class TestModel(unittest.TestCase):
     # ~~ Test fetch destination
 
     def test_handles_missing_directory(self):
-        pass
+        # if a directory for an image does not exist, it should be made
+        # also tests that model doesn't care if no packs section
+
+        desktop_folder = tempfile.mkdtemp(prefix='HS_')
+        self.config.set('filepaths', 'desktop', desktop_folder)
+        pack_output = os.path.join(desktop_folder, 'packs')
+        self.config.add_section('output')
+        self.config.set('output', 'packs', pack_output)
+
+        # Add folders to teardown
+        self.teardown_dirs.append(pack_output)
+        self.teardown_dirs.append(desktop_folder)
+
+        model = Model(self.config)
+
+        self.assertFileNotExists(pack_output)
+
+        dest_folder = model.fetch_destination('packs')
+
+        self.assertFileExists(pack_output)
+        self.assertFileExists(dest_folder)
+        self.assertEqual(os.path.normcase(dest_folder), os.path.normcase(pack_output))
+
+    def test_section_present_no_seperation(self):
+        # if there is a packs section in the config, but is incomplete, should pose no issue
+
+        desktop_folder = tempfile.mkdtemp(prefix='HS_')
+        self.config.set('filepaths', 'desktop', desktop_folder)
+        pack_output = os.path.join(desktop_folder, 'packs')
+        self.config.add_section('output')
+        self.config.set('output', 'packs', pack_output)
+        self.config.add_section('packs')
+        self.config.set('packs', 'name', 'Packs')
+
+        # Add folders to teardown
+        self.teardown_dirs.append(pack_output)
+        self.teardown_dirs.append(desktop_folder)
+
+        model = Model(self.config)
+
+        self.assertFileNotExists(pack_output)
+
+        dest_folder = model.fetch_destination('packs')
+
+        self.assertFileExists(pack_output)
+        self.assertFileExists(dest_folder)
+        self.assertEqual(os.path.normcase(dest_folder), os.path.normcase(pack_output))
 
     def test_year_separated_directory(self):
-        pass
+        # check year directories are made correctly
+
+        desktop_folder = tempfile.mkdtemp(prefix='HS_')
+        self.config.set('filepaths', 'desktop', desktop_folder)
+        pack_output = os.path.join(desktop_folder, 'packs')
+        self.config.add_section('output')
+        self.config.set('output', 'packs', pack_output)
+        self.config.add_section('packs')
+        self.config.set('packs', 'name', 'Packs')
+        self.config.set('packs', 'yearseperated', 'yes')
+
+        year = '2017'
+        file = 'Hearthstone Screenshot 06-07-{} 08.09.10.png'.format(year[2:])
+        image_path = os.path.join(desktop_folder, file)
+        self.make_image(image_path)
+
+        expected_output = os.path.join(pack_output, year)
+
+        # Add folders to teardown
+        self.teardown_files.append(image_path)
+        self.teardown_dirs.append(expected_output)
+        self.teardown_dirs.append(pack_output)
+        self.teardown_dirs.append(desktop_folder)
+
+        model = Model(self.config)
+
+        self.assertFileNotExists(pack_output)
+
+        dest_folder = model.fetch_destination('packs')
+
+        self.assertFileExists(pack_output)
+        self.assertFileExists(dest_folder)
+        self.assertEqual(os.path.normcase(dest_folder), os.path.normcase(expected_output))
+
+        # close image before teardown
+        model.image.close()
 
     def test_month_separated_directory(self):
-        pass
+        # check year directories are made correctly
+
+        desktop_folder = tempfile.mkdtemp(prefix='HS_')
+        self.config.set('filepaths', 'desktop', desktop_folder)
+        pack_output = os.path.join(desktop_folder, 'Packs')
+        self.config.add_section('output')
+        self.config.set('output', 'packs', pack_output)
+        self.config.add_section('packs')
+        self.config.set('packs', 'name', 'Packs')
+        self.config.set('packs', 'monthseperated', 'yes')
+
+        month = 'May'
+        month_num = '05'
+        file = 'Hearthstone Screenshot {}-07-17 08.09.10.png'.format(month_num)
+        image_path = os.path.join(desktop_folder, file)
+        self.make_image(image_path)
+
+        expected_output = os.path.join(pack_output, month)
+
+        # Add folders to teardown
+        self.teardown_files.append(image_path)
+        self.teardown_dirs.append(expected_output)
+        self.teardown_dirs.append(pack_output)
+        self.teardown_dirs.append(desktop_folder)
+
+        model = Model(self.config)
+
+        self.assertFileNotExists(pack_output)
+
+        dest_folder = model.fetch_destination('packs')
+
+        self.assertFileExists(pack_output)
+        self.assertFileExists(dest_folder)
+        self.assertEqual(os.path.normcase(dest_folder), os.path.normcase(expected_output))
+
+        # close image before teardown
+        model.image.close()
+
+    def test_year_month_seperated_directory(self):
+        # check month and year directories are made correctly
+
+        desktop_folder = tempfile.mkdtemp(prefix='HS_')
+        self.config.set('filepaths', 'desktop', desktop_folder)
+        pack_output = os.path.join(desktop_folder, 'Packs')
+        self.config.add_section('output')
+        self.config.set('output', 'packs', pack_output)
+        self.config.add_section('packs')
+        self.config.set('packs', 'name', 'Packs')
+        self.config.set('packs', 'yearseperated', 'yes')
+        self.config.set('packs', 'monthseperated', 'yes')
+
+        year = '2017'
+        month = 'May'
+        month_num = '05'
+        file = 'Hearthstone Screenshot {}-07-{} 08.09.10.png'.format(month_num, year[2:])
+        image_path = os.path.join(desktop_folder, file)
+        self.make_image(image_path)
+
+        expected_year_folder = os.path.join(pack_output, year)
+        expected_month_folder = os.path.join(expected_year_folder, month)
+
+        # Add folders to teardown
+        self.teardown_files.append(image_path)
+        self.teardown_dirs.append(expected_month_folder)
+        self.teardown_dirs.append(expected_year_folder)
+        self.teardown_dirs.append(pack_output)
+        self.teardown_dirs.append(desktop_folder)
+
+        model = Model(self.config)
+
+        self.assertFileNotExists(pack_output)
+
+        dest_folder = model.fetch_destination('packs')
+
+        self.assertFileExists(pack_output)
+        self.assertFileExists(dest_folder)
+        self.assertEqual(os.path.normcase(dest_folder), os.path.normcase(expected_month_folder))
+
+        # close image before teardown
+        model.image.close()
 
     # ~~ Test not_pack
 

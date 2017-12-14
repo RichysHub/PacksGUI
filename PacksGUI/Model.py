@@ -5,6 +5,7 @@ from tkinter import StringVar, IntVar
 from PIL import Image
 from tinydb import TinyDB, Query
 from datetime import datetime
+from calendar import month_name
 
 from CardPack import CardPack
 from Hearthstone import Hearthstone
@@ -191,6 +192,9 @@ class Model:
         dest_folder = self.fetch_destination('packs')
 
         destination = os.path.join(dest_folder, self.current_pack.image_name)
+
+        print('Destination set to {}. Continue?'.format(destination))
+        input()  # REMOVE, testing hold
         # Todo: for testing, file movement is disabled
         # shutil.move(self.current_pack.full_path, destination)
 
@@ -212,13 +216,15 @@ class Model:
         # Images for things other than packs will have a sub page of the storage screen
         self.next_pack()
 
-    def fetch_destination(self, output_name):
-        folder = self.config['output'][output_name]
+    def fetch_destination(self, out_name):
+        folder = self.config['output'][out_name]
         path_parts = []
-        if self.config[output_name]['yearseperated'] == 'yes':
-            path_parts.append(str(self.current_pack.date.year))
-        if self.config[output_name]['monthseperated'] == 'yes':
-            path_parts.append(str(self.current_pack.date.month))
+
+        if self.config.has_section(out_name):
+            if self.config.getboolean(out_name,'yearseperated', fallback=False):
+                path_parts.append(str(self.current_pack.date.year))
+            if self.config.getboolean(out_name, 'monthseperated', fallback=False):
+                path_parts.append(month_name[self.current_pack.date.month])
         dest_folder = os.path.join(folder, *path_parts)
 
         os.makedirs(dest_folder, exist_ok=True)  # create folder, and all intermediary folders, if needed
