@@ -1,4 +1,5 @@
 import os
+import shutil
 from collections import Counter
 from tkinter import StringVar, IntVar
 
@@ -193,10 +194,11 @@ class Model:
 
         destination = os.path.join(dest_folder, self.current_pack.image_name)
 
+        print('File to move: {}'.format(self.current_pack.full_path))
         print('Destination set to {}. Continue?'.format(destination))
         input()  # REMOVE, testing hold
-        # Todo: for testing, file movement is disabled
-        # shutil.move(self.current_pack.full_path, destination)
+        self.image.close()
+        shutil.move(self.current_pack.full_path, destination)
 
         # TODO: check this is needed
         self.extract_data()
@@ -241,6 +243,8 @@ class Model:
 
         set_name = self.view_card_set.get()
 
+        if not set_name:
+            return
         if set_name == 'Card Set':
             return
         elif set_name == 'All Sets':  # case looking for all packs handled separately

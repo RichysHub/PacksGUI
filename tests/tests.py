@@ -8,6 +8,7 @@ from datetime import datetime
 
 from PIL import Image
 from tinydb import TinyDB
+from calendar import month_name
 
 import CardPack
 from IntScroller import IntScroller
@@ -771,14 +772,36 @@ class TestModel(unittest.TestCase, CustomAssertions):
         pass
 
     def test_image_correctly_moved(self):
-        # Test for each output folder
+        # test that image is correctly moved to output folder
+        # doesn't check for month separated etc, assumed covered by other tests
 
-        # # not really needed, but allows easier cleanup
-        # hearthstone_screenshot_folder = tempfile.mkdtemp()
-        # # self.teardown_list.append(hearthstone_screenshot_folder)
-        # pack_folder = os.path.join(hearthstone_screenshot_folder, 'Packs')
-        # os.mkdir(pack_folder)
-        pass
+        desktop_folder = tempfile.mkdtemp(prefix='HS_')
+        self.config.set('filepaths', 'desktop', desktop_folder)
+        pack_output = os.path.join(desktop_folder, 'Packs')
+        self.config.add_section('output')
+        self.config.set('output', 'packs', pack_output)
+
+        file = 'Hearthstone Screenshot 04-07-17 08.09.10.png'
+        image_path = os.path.join(desktop_folder, file)
+        self.make_image(image_path)
+
+        expected_output = os.path.join(pack_output, file)
+
+        # Add folders to teardown
+        self.teardown_files.append(expected_output)
+        self.teardown_dirs.append(pack_output)
+        self.teardown_dirs.append(desktop_folder)
+
+        model = Model(self.config)
+        self.assertFileExists(image_path)
+        self.assertFileNotExists(expected_output)
+
+        model.card_set.set('Classic')
+        model.submit_cardpack()
+
+        self.assertFileExists(expected_output)
+        self.assertFileNotExists(image_path)
+
 
     # ~~ Test fetch destination
 
@@ -788,7 +811,7 @@ class TestModel(unittest.TestCase, CustomAssertions):
 
         desktop_folder = tempfile.mkdtemp(prefix='HS_')
         self.config.set('filepaths', 'desktop', desktop_folder)
-        pack_output = os.path.join(desktop_folder, 'packs')
+        pack_output = os.path.join(desktop_folder, 'Packs')
         self.config.add_section('output')
         self.config.set('output', 'packs', pack_output)
 
@@ -811,7 +834,7 @@ class TestModel(unittest.TestCase, CustomAssertions):
 
         desktop_folder = tempfile.mkdtemp(prefix='HS_')
         self.config.set('filepaths', 'desktop', desktop_folder)
-        pack_output = os.path.join(desktop_folder, 'packs')
+        pack_output = os.path.join(desktop_folder, 'Packs')
         self.config.add_section('output')
         self.config.set('output', 'packs', pack_output)
         self.config.add_section('packs')
@@ -836,7 +859,7 @@ class TestModel(unittest.TestCase, CustomAssertions):
 
         desktop_folder = tempfile.mkdtemp(prefix='HS_')
         self.config.set('filepaths', 'desktop', desktop_folder)
-        pack_output = os.path.join(desktop_folder, 'packs')
+        pack_output = os.path.join(desktop_folder, 'Packs')
         self.config.add_section('output')
         self.config.set('output', 'packs', pack_output)
         self.config.add_section('packs')
@@ -922,8 +945,8 @@ class TestModel(unittest.TestCase, CustomAssertions):
         self.config.set('packs', 'monthseperated', 'yes')
 
         year = '2017'
-        month = 'May'
         month_num = '05'
+        month = month_name[int(month_num)]
         file = 'Hearthstone Screenshot {}-07-{} 08.09.10.png'.format(month_num, year[2:])
         image_path = os.path.join(desktop_folder, file)
         self.make_image(image_path)
