@@ -74,7 +74,7 @@ class GUI:
 
         other_subpage = self.pack_view.add_subpage(OtherMiniView)
         # Todo: work out where folders are read from config and passed here
-        # other_subpage.add_selector()
+        other_subpage.add_selector(self.model.selected_folder, *self.model.other_pages)
         self.pack_view.raise_view(pack_subpage.name)
 
     def configure_stats_view(self):
@@ -100,6 +100,16 @@ class GUI:
 
     # TODO: probably want a rename for this, given it's now going to be not pack, not arena, not EoS etc
     def not_pack(self):
+
+        active_page = self.pack_view.active_subpage.get()
+
+        if active_page == 'ArenaRewards':
+            # cleanup. Need to really decide what a 'not pack' here means
+            # TODO: VERY WET, duplication from Arena2 submit logic
+            self.main_view.enable_buttons()
+            self.pack_view.enable_buttons()
+            self.pack_view.subpages['Arena Rewards'].raise_view('Arena1')
+
         self.model.next_pack()
         self.update_image()
 
@@ -175,7 +185,7 @@ class GUI:
         elif active_page == 'Season End':  # End of season rewards page
             pass
         elif active_page == 'Other':  # Other image page
-            pass
+            self.model.submit()
         else:
             pass
 

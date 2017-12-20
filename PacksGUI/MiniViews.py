@@ -263,7 +263,7 @@ class OtherMiniView(View):
         self.master = master
         self.name = 'Other'
         self.folder_selection = None
-        self.size_grid(1, 1)
+        self.size_grid(3, 1)
 
     # TODO: set selector is a little bit WET, may want a very minor refactor
     def add_selector(self, variable, *options):
@@ -271,4 +271,4 @@ class OtherMiniView(View):
         # Selection of a folder, and hitting save just auto-routes the image to the correct folder
         # Config is used by the model to determine any sub-folders by year/month
         self.folder_selection = OptionMenu(self, variable, "Folder", *options)
-        self.folder_selection.grid()
+        self.folder_selection.grid(row=1,column=0, sticky=NSEW)

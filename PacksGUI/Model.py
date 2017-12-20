@@ -55,6 +55,15 @@ class Model:
         self.end_rank =  IntVar()
         self.max_rank = IntVar()
 
+        # ~~ Other subpage ~~
+        self.output_names = {self.config.get(item[0], 'name', fallback=item[0]): item[0]
+                             for item in self.config.items('output')}
+
+        self.other_pages = [self.config.get(item[0], 'name', fallback=item[0])
+                            for item in self.config.items('output')
+                            if item[0] not in ['packs', 'arena', 'rewards',]]
+        self.selected_folder = StringVar()
+
         # ~~ Stats view ~~
         self.viewed_total_quantities = {}  # quantities for each rarity, for stats view
         self.viewed_mean_quantities = {}
@@ -159,6 +168,7 @@ class Model:
     # imagine we were moving both into web-based databasing
 
     # Should the correct submission process be the responsibility of Model or Controller?
+
     def submit(self):
         # commits pack data to tinydb file
         # makes no attempt to validate, assumes you have sorted this
@@ -194,13 +204,14 @@ class Model:
 
         destination = os.path.join(dest_folder, self.current_pack.image_name)
 
-        print('File to move: {}'.format(self.current_pack.full_path))
-        print('Destination set to {}. Continue?'.format(destination))
+        print('\nFile to move: {}'.format(self.current_pack.full_path))
+        print('\nDestination set to {}. Continue?'.format(destination))
         input()  # REMOVE, testing hold
         self.image.close()
         shutil.move(self.current_pack.full_path, destination)
 
         # TODO: check this is needed
+        # TODO: move to end of main submit function
         self.extract_data()
         self.next_pack()
 
@@ -211,7 +222,26 @@ class Model:
         pass
 
     def submit_other(self):
-        pass
+        folder_selection = self.selected_folder.get()
+        if folder_selection not in self.output_names:
+            # TODO: proper handling
+            print('Unknown output folder "{}"'.format(folder_selection))
+            return
+
+        folder_name = self.output_names[folder_selection]
+        dest_folder = self.fetch_destination(folder_name)
+        destination = os.path.join(dest_folder, self.current_pack.image_name)
+
+        print('\nFile to move: {}'.format(self.current_pack.full_path))
+        print('\nDestination set to {}. Continue?'.format(destination))
+        input()  # REMOVE, testing hold
+        self.image.close()
+        shutil.move(self.current_pack.full_path, destination)
+
+        # TODO: check this is needed
+        # TODO: move to end of main submit function
+        self.extract_data()
+        self.next_pack()
 
     def not_pack(self):
         # "Not pack" will likely be removed and made into "skip".

@@ -219,10 +219,6 @@ class StatsView(View):
 
         self.stats_figure = Figure(figsize=(5, 4), dpi=100)
         self.stats_plot = self.stats_figure.add_subplot(111)
-        t = [x/10 for x in range(0, 300)]
-        s = [x/100 for x in range(0, 300)]
-
-        self.stats_plot.plot(t, s)
 
         self.fig_frame = Frame(self)
         self.fig_frame.grid(row=6, column=0, columnspan=4, sticky=NSEW)
@@ -266,9 +262,10 @@ class StatsView(View):
         self.stats_plot.xaxis.set_major_formatter(yearsFmt)
         self.stats_plot.xaxis.set_minor_locator(months)
 
-        datemin = datetime.date(2013, 1, 1)
+        datemin = datetime.date(2013, 12, 14)
         datemax = datetime.date(datetime.date.today().year + 1, 1, 1)
         self.stats_plot.set_xlim(datemin, datemax)
+        self.stats_plot.xaxis_date()
         self.stats_figure.canvas.draw()
 
     def clear(self):
